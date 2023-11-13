@@ -1,25 +1,21 @@
-import logo from './logo.svg';
-import './App.css';
+// App.js
+import { Routes, Route } from 'react-router-dom';
+import Home from './Home';
+//import About from './Pages/About';
+import DAW from './DAW/DAW';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+const App = () => {
+ return (
+      <div className='d-flex flex-column' style={{ height: '100svh', overflowX: 'hidden' }}>
+            <div className='flex-fill'>
+            <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/app" element={<DAW/>} />
+          {/*<Route path="/about" element={<About />} />*/}
+            </Routes>
+            </div>
+      </div>
+ );
+};
 
 export default App;
