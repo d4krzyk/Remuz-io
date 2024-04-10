@@ -1,10 +1,10 @@
 import { React, useState, useRef, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import WavesurferMultiTrackPlayer from './WavesurferMultiTrackPlayer';
+import WavesurferMultiTrackPlayer from './Multitrack/WavesurferMultiTrackPlayer';
 import { Howl } from 'howler';
 import NavigationBar from './NavigationBar';
 import WaveSurfer from 'wavesurfer.js';
-import SoundLib from './SoundLib';
+import SoundLib from './SoundLib/SoundLib';
 function DAW() {
   const tracks = [
     { url: '/DAW/flute_melody0.mp3', name: 'flute' },

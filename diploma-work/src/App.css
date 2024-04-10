@@ -1,3 +1,24 @@
 body{
   background-color:rgb(41, 41, 41);
 }
+/* Stylizacja paska przewijania dla WebKit przeglądarek */
+.scrollable-sidebar::-webkit-scrollbar {
+  width: 8px; /* Szerokość paska przewijania */
+  border-color: #ffffff;
+  border-width: 3px;
+}
+
+.scrollable-sidebar::-webkit-scrollbar-track {
+  background: #ffffff; /* Kolor tła toru paska przewijania */
+}
+
+.scrollable-sidebar::-webkit-scrollbar-thumb {
+  background: #2c56ff; /* Kolor "uchwytu" paska przewijania */
+  border-color: #090f25;
+  border-width: 3px;
+  border-radius: 3px;
+}
+
+.scrollable-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #6581ff; /* Kolor "uchwytu" paska przewijania przy najechaniu */
+}
