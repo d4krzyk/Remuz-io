@@ -18,13 +18,30 @@ const showButton = {
 		},
 	},
 };
-
+const showIcon = {
+	hidden: {
+		opacity: 0,
+		y: '-80%',
+	},
+	visible: {
+		opacity: 1,
+		y: '0%',
+		transition: {
+			duration: '2',
+			ease: 'easeInOut',
+		},
+	},
+};
 
 function Home() {
   return (
     <div className="cover-container justify-content-center d-flex h-100 p-3 mx-auto flex-column bg-dark">
       <div className='row'>
-        
+        <motion.div className='bi text-center bi-file-music-fill text-white' style={{ fontSize: '64px' }}
+        initial='hidden'
+        animate='visible'
+        variants={showIcon}>
+        </motion.div>
         <h1 className='text-white text-center'>Remuz.io App</h1>
         <div className='cover-container text-center '>
           <Link to={"/app"} className="text-white">
