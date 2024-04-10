@@ -15,15 +15,15 @@ function SoundLib() {
       },
     },
   };
-  const [audioFiles, setAudioFiles] = useState([]); // Lista plików audio
-  const [currentFileIndex, setCurrentFileIndex] = useState(null); // Indeks aktualnie odtwarzanego pliku
+  const [currentFileID, setCurrentFileID] = useState(null); // Indeks aktualnie odtwarzanego pliku
   const [isPlaying, setIsPlaying] = useState(false); // Stan odtwarzania
+  const [sounds, setSounds] = useState([]); // Lista dźwięków
 
   useEffect(() => {
-    audioFiles.forEach((file, index) => {
-      if (!file.wavesurfer && document.querySelector(`#waveform-container-${file.id}`)) {
+    sounds.forEach((sound) => {
+      if (!sound.wavesurfer) {
         const wavesurfer = WaveSurfer.create({
-          container: `#waveform-container-${file.id}`,
+          container: `#waveform-container-${sound.id}`,
           waveColor: 'white',
           progressColor: 'purple',
           height: 30,
@@ -35,81 +35,67 @@ function SoundLib() {
           cursorWidth: 0,
           interact: true,
         });
-        wavesurfer.load(file.audioSrc);
+        wavesurfer.load(sound.audioSrc);
 
         wavesurfer.on('finish', () => {
           wavesurfer.stop(); // zatrzymuje i resetuje na początek
-          setCurrentFileIndex(null); // resetuje obecnie odtwarzany indeks
+          setCurrentFileID(null); // resetuje obecnie odtwarzany indeks
           setIsPlaying(false); // ustawia stan odtwarzania na false
         });
 
-        // Aktualizacja stanu z nową instancją WaveSurfer
-        setAudioFiles(prevFiles => {
-          const newFiles = [...prevFiles];
-          newFiles[index] = { ...newFiles[index], wavesurfer };
-          return newFiles;
-        });
+        setSounds(prevSounds => prevSounds.map(s =>
+          s.id === sound.id ? { ...s, wavesurfer: wavesurfer } : s
+        ));
       }
     });
-  }, [audioFiles]);
+  }, [sounds]);
 
-  const handleFileChange = e => {
-    const files = Array.from(e.target.files).map(file => {
-      // Zamiana kropki na myślnik, aby ID było kompatybilne z selektorem CSS
-      const uniqueId = (Date.now() + Math.random()).toString().replace('.', '-');
-      return {
-        id: uniqueId,
-        audioSrc: URL.createObjectURL(file),
-        name: file.name,
-        isPlaying: false,
-      };
-    });
+  const addSounds = (newFiles) => {
+    // Tworzenie tablicy nowych dźwięków
+    const newSounds = newFiles.map(file => ({
+      id: (Date.now() + Math.random()).toString().replace('.', '-'),
+      name: file.name,
+      audioSrc: URL.createObjectURL(file),
+      isPlaying: false,
+    }));
 
-    setAudioFiles(prevFiles => [...prevFiles, ...files]);
+    // Aktualizacja stanu
+    setSounds(prevSounds => [...prevSounds, ...newSounds]);
+  };
+  const removeSound = (idToRemove) => {
+    //Usuwanie wybranego dźwięku po ID
+    const soundToRemove = sounds.find(sound => sound.id === idToRemove);
+    if (soundToRemove && soundToRemove.wavesurfer) {
+      soundToRemove.wavesurfer.destroy();
+    }
+    setSounds(sounds.filter(sound => sound.id !== idToRemove));
   };
 
-  const togglePlayback = (index) => {
-    setCurrentFileIndex(index);
-    const file = audioFiles[index];
-    if (file.wavesurfer) {
-      if (currentFileIndex === index) {
-        if (file.wavesurfer.isPlaying()) {
-        setIsPlaying(false);
-        file.wavesurfer.pause();
-        } else {
-        setIsPlaying(true);
-        file.wavesurfer.play();
-        }
-      }
-      else{
-        if (currentFileIndex !== null) {
-          audioFiles[currentFileIndex].wavesurfer.stop();
-        }
-        setCurrentFileIndex(index);
-        file.wavesurfer.play();
-        setIsPlaying(true);
-      }
-    }
-  };
+  const togglePlayback = (id) => {
+    // Znajdywanie dźwięku na podstawie jego id
+    const file = sounds.find(sound => sound.id === id);
 
-  const deleteFile = (index) => {
-    const file = audioFiles[index];
-    if (file && file.wavesurfer) {
-      file.wavesurfer.destroy();
+    // Sprawdzanie czy dźwięk został znaleziony
+    if (!file || !file.wavesurfer) {
+      console.log('Nie znaleziono wybranego dźwięku')
+      return;
     }
-    
-    // Usuń plik z listy
-    setAudioFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
-    
-    // Jeśli usunięty plik był aktualnie odtwarzanym plikiem, zresetuj odtwarzacz
-    if (currentFileIndex === index) {
-      setCurrentFileIndex(null);
+
+    //Zatrzymanie odtwarzania
+    if (file.wavesurfer.isPlaying()) {
+      file.wavesurfer.pause();
       setIsPlaying(false);
-    }
-    // Jeśli usunięty plik miał niższy indeks niż aktualnie odtwarzany,
-    // to zmniejsz aktualny indeks o jeden, żeby odzwierciedlić nowy stan tablicy
-    else if (index < currentFileIndex) {
-      setCurrentFileIndex(currentFileIndex - 1);
+    } else {
+      // Zastpowoanie wszystkich innych dźwięków przed odtworzeniem nowego
+      sounds.forEach(sound => {
+        if (sound.id !== id && sound.wavesurfer) {
+          sound.wavesurfer.stop();
+        }
+      });
+      //Włączenie odtwarzania wybranego dźwięku
+      file.wavesurfer.play();
+      setCurrentFileID(id); // Uaktualnij stan aktualnie odtwarzanego ID
+      setIsPlaying(true);
     }
   };
 
@@ -118,7 +104,10 @@ function SoundLib() {
       <input
         type="file"
         accept="audio/*"
-        onChange={handleFileChange}
+        onChange={(e) => {
+          const files = Array.from(e.target.files);
+          addSounds(files)
+        }}
         style={{ display: 'none' }}
         id="uploadInput"
         multiple
@@ -130,8 +119,8 @@ function SoundLib() {
         </motion.label>
       </li>
       <div style={{ maxHeight: '85vh' }} className='mt-2 rounded-2 overflow-y-auto scrollable-sidebar'>
-        {audioFiles.map((file, index) => (
-          <motion.li key={index}
+        {sounds.map(sound => (
+          <motion.li key={sound.id}
             initial='hidden'
             animate='visible'
             variants={showSound}
@@ -139,12 +128,12 @@ function SoundLib() {
             <div className='nav-link bg-primary text-white m-1 py-1 px-0'>
               <div className="d-flex align-items-center justify-content-between p-2" >
                 <motion.div className=' d-inline-flex' whileTap={{ scale: 0.8 }}>
-                  <i className={`bi ${currentFileIndex === index && isPlaying ? "bi-pause-fill" : "bi-play-fill"}`}
-                    onClick={() => togglePlayback(index)} />
+                  <i className={`bi ${currentFileID === sound.id && isPlaying ? "bi-pause-fill" : "bi-play-fill"}`}
+                    onClick={() => togglePlayback(sound.id)} />
                 </motion.div>
-                <div id={`waveform-container-${file.id}`} className='flex-grow-1 mx-1 waveform' ></div>
+                <div id={`waveform-container-${sound.id}`} className='flex-grow-1 mx-1 waveform' ></div>
                 <motion.div className=' d-inline-flex' whileTap={{ scale: 0.8 }}>
-                  <i className={`bi text-danger rounded-1 bi-trash-fill`} onClick={() => deleteFile(index)} />
+                  <i className={`bi text-danger rounded-1 bi-trash-fill`} onClick={() => removeSound(sound.id)} />
                 </motion.div>
               </div>
             </div>
