@@ -1,4 +1,4 @@
-import { React, useState, useRef, useEffect } from 'react';
+import { React, useState, useEffect } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import { motion } from 'framer-motion';
 import '../../App.css'
@@ -47,6 +47,13 @@ function SoundLib() {
           s.id === sound.id ? { ...s, wavesurfer: wavesurfer } : s
         ));
       }
+  // Funkcja czyszcząca
+  return () => {
+    sounds.forEach((sound) => {
+      sound.wavesurfer && sound.wavesurfer.destroy();
+    });
+  };
+  
     });
   }, [sounds]);
 

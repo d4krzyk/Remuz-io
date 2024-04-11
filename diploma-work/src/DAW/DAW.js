@@ -1,10 +1,9 @@
-import { React, useState, useRef, useEffect } from 'react';
+import { React } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import WavesurferMultiTrackPlayer from './Multitrack/WavesurferMultiTrackPlayer';
-import { Howl } from 'howler';
 import NavigationBar from './NavigationBar';
-import WaveSurfer from 'wavesurfer.js';
 import SoundLib from './SoundLib/SoundLib';
+import ToolsBar from './Multitrack/ToolsBar';
 function DAW() {
   const tracks = [
     { url: '/DAW/flute_melody0.mp3', name: 'flute' },
@@ -18,6 +17,7 @@ function DAW() {
         <div style={{ width: '9.5rem' }} className='d-flex flex-column flex-shrink-0 bg-body justify-content-start'>
           <SoundLib/>
         </div>
+        <ToolsBar/>
         <WavesurferMultiTrackPlayer tracks={tracks} />
         {/*<div className='row'>
         

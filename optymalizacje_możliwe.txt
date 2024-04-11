@@ -1,0 +1,2 @@
+> W pliku SoundLib.js można zmienić sposób inicjalizacji wavesurfer i dodać logikę gdzie 
+dodajemy stan czy dany dźwięk posiada wavesurfera zainicjalizowanego. (Zwiększenie wydajności)
