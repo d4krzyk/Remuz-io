@@ -19,8 +19,14 @@ function ToolsBar() {
           <button type="button" class="btn py-0 px-1 btn-transparent" data-toggle="tooltip" data-placement="button" title="Select tool">
             <i className='bi text-dark bi-cursor-fill' />
           </button>
-          <button type="button" class="btn py-0 px-1 btn-transparent" data-toggle="tooltip" data-placement="button" title="Cut tool">
+          <button type="button" class="btn py-0 px-1 btn-transparent" data-toggle="tooltip" data-placement="button" title="Copy fragment tool">
+            <i className='bi text-dark bi-copy' />
+          </button>
+          <button type="button" class="btn py-0 px-1 btn-transparent" data-toggle="tooltip" data-placement="button" title="Cut fragment tool">
             <i className='bi text-dark bi-scissors' />
+          </button>
+          <button type="button" class="btn py-0 px-1 btn-transparent" data-toggle="tooltip" data-placement="button" title="Delete fragment tool">
+            <i className='bi text-dark bi-x-octagon' />
           </button>
           <button type="button" class="btn py-0 px-1 btn-transparent" data-toggle="tooltip" data-placement="button" title="Volume Automation tool">
             <i className='bi text-dark bi-bezier2' />
