@@ -6,3 +6,5 @@ Rozwiązaniem może być alternatywna metoda, gdzie możemy dodać narzędzie ko
 go poniżej albo narzędzie wycięcia i wklejenia poniżej. Można też dodać wtedy narzędzie usuwania danego fragmentu. 
 Może to pomóc w edycji naszych dźwięków bez konieczności umieszczania dwóch dźwięków na jednym polu.
 (Obsluga tych narzedzi to zaznaczanie fragmentu lewym przyciskiem myszy a prawym dokonywanie akcji)
+
+> Dodać pitch suwak i volume suwak dla multitracka 
