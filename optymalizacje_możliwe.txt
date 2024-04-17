@@ -7,4 +7,12 @@ go poniżej albo narzędzie wycięcia i wklejenia poniżej. Można też dodać w
 Może to pomóc w edycji naszych dźwięków bez konieczności umieszczania dwóch dźwięków na jednym polu.
 (Obsluga tych narzedzi to zaznaczanie fragmentu lewym przyciskiem myszy a prawym dokonywanie akcji)
 
-> Dodać pitch suwak i volume suwak dla multitracka 
+> Dodać pitch suwak i volume suwak dla multitracka
+
+> Dodać możliwość przesuwania najdłuższego utworu
+
+> Dodać możliwość stretchowania utworów
+
+> Dodać możliwość podpisania danego utworu
+
+> Dodać możliwość zwiększania dozwolonych ścieżek (dodawanie pustych ścieżek)

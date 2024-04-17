@@ -14,7 +14,7 @@ function ToolsBar() {
     };
 
     return(
-        <Navbar className="d-flex  bg-dark-subtle w-100 justify-content-between" style={{ height: '40px' }}>
+        <Navbar className="d-flex bg-dark-subtle w-100 justify-content-between" style={{ height: '45px' }}>
           <Nav className='ms-2 gap-2 d-flex '>
           <button type="button" class="btn py-0 px-1 btn-transparent" data-toggle="tooltip" data-placement="button" title="Select tool">
             <i className='bi text-dark bi-cursor-fill' />

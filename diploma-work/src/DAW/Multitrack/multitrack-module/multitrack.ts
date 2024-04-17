@@ -147,7 +147,6 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
     this.maxDuration = this.tracks.reduce((max, track, index) => {
       return Math.max(max, track.startPosition + durations[index])
     }, 0)
-
     const placeholderAudioIndex = this.audios.findIndex((a) => a.src === PLACEHOLDER_TRACK.url)
     const placeholderAudio = this.audios[placeholderAudioIndex]
     if (placeholderAudio) {
@@ -488,9 +487,19 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
       this.audios[index]?.play()
     })
   }
+  
+
 
   public pause() {
     this.audios.forEach((audio) => audio.pause())
+  }
+  public stop() {
+    this.audios.forEach((audio) => {
+      audio.pause();
+      
+      audio.currentTime = 0; // Ustawienie czasu audio na początek
+    });
+    this.updatePosition(0,false)
   }
 
   public isPlaying() {
@@ -587,16 +596,16 @@ function initRendering(tracks: MultitrackTracks, options: MultitrackOptions) {
   let pxPerSec = 0
   let durations: number[] = []
   let mainWidth = 0
-
+  
   // Create a common container for all tracks
   const scroll = document.createElement('div')
-  scroll.setAttribute('style', 'width: 100%; overflow-x: auto; overflow-y: hidden; user-select: none;')
+  scroll.setAttribute('style', 'width: 88vw; overflow-x: auto; overflow-y: auto; user-select: none;')
   const wrapper = document.createElement('div')
   scroll.classList.add('scroll-track');
   wrapper.style.position = 'relative'
+  scroll.style.maxHeight = '89vh';
   scroll.appendChild(wrapper)
   options.container.appendChild(scroll)
-
   // Create a common cursor
   const cursor = document.createElement('div')
   cursor.setAttribute('style', 'height: 100%; position: absolute; z-index: 10; top: 0; left: 0; pointer-events: none;')
@@ -607,8 +616,14 @@ function initRendering(tracks: MultitrackTracks, options: MultitrackOptions) {
 
   // Create containers for each track
   const containers = tracks.map((track, index) => {
+
+    
     const container = document.createElement('div')
+
+    
     container.style.position = 'relative'
+    // Add button only if there's audio associated with the track
+
 
     if (track.id === PLACEHOLDER_TRACK.id) {
       container.style.display = 'none'
@@ -645,6 +660,8 @@ function initRendering(tracks: MultitrackTracks, options: MultitrackOptions) {
       })
       container.appendChild(dropArea)
     }
+
+    
 
     wrapper.appendChild(container)
 

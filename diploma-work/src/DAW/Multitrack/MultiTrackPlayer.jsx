@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import Multitrack from './multitrack-module/multitrack.ts'
+import Multitrack from './multitrack-module/multitrack.ts';
+import './multitrack-module/multitrack.css'
 const MultiTrackPlayer = () => {
 
-  const [initializeOnce, setInitializeOnce] = useState(false);
   const initRef = useRef(false);
-
+  const [isPlaying, setIsPlaying] = useState(false);
   useEffect( () => {
     if(initRef.current === true) 
       {return}
@@ -16,7 +16,11 @@ const multitrack = Multitrack.create(
   [
     {
       id: 0,
-      url: "mocna fagata.mp3"
+      url: 'mocna fagata.mp3',
+      draggable: true,
+      intro: {
+        label: 'sex',
+      }
     },
     {
       id: 1,
@@ -33,25 +37,37 @@ const multitrack = Multitrack.create(
     {
       id: 5,
     },
+    {
+      id: 6,
+    },
+    {
+      id: 7,
+    },
+    {
+      id: 8,
+    },
+    {
+      id: 9,
+    },
   ],
   {
     container: document.querySelector('#container-multitrack'), // required!
-    minPxPerSec: 10, // zoom level
+    minPxPerSec: 2, // zoom level
     rightButtonDrag: false, // set to true to drag with right mouse button
-    cursorWidth: 2,
-    cursorColor: '#D72F21',
-    trackBackground: '#2D2D2D',
-    trackBorderColor: '#7C7C7C',
+    cursorWidth: 4,
+    cursorColor: '#6c75f0',
+    trackBackground: '#3d3c66',
+    trackBorderColor: '#424569',
     dragBounds: true,
     envelopeOptions: {
       lineColor: 'rgba(255, 0, 0, 0.7)',
-      lineWidth: 4,
+      lineWidth: 3,
       dragPointSize: window.innerWidth < 600 ? 20 : 10,
       dragPointFill: 'rgba(255, 255, 255, 0.8)',
       dragPointStroke: 'rgba(255, 255, 255, 0.3)',
     },
     timelineOptions: {
-      height: 70,
+      height: 20,
     },
   },
 )
@@ -92,28 +108,39 @@ multitrack.on('envelope-points-change', ({ id, points }) => {
 multitrack.on('drop', ({ id }) => {
   multitrack.addTrack({
     id,
-    url: 'flute_melody0.mp3',
+    url: 'Enejowy pop.mp3',
+    
     startPosition: 0,
     draggable: true,
     options: {
-      waveColor: 'hsl(25, 87%, 49%)',
-      progressColor: 'hsl(25, 87%, 20%)',
+      waveColor: 'hsl(265, 87%, 49%)',
+      progressColor: 'hsl(265, 87%, 20%)',
     },
   })
 })
 
 // Play/pause button
-const button = document.querySelector('#play-music-button')
+const button_start_pause = document.querySelector('#play-music-button')
 //button.disabled = true
 multitrack.once('canplay', () => {
   //button.disabled = false
-  button.onclick = () => {
+  button_start_pause.onclick = () => {
     multitrack.isPlaying() ? multitrack.pause() : multitrack.play()
+    setIsPlaying(!isPlaying);
     //button.textContent = multitrack.isPlaying() ? 'Pause' : 'Play'
   }
 })
 
-
+// Play/pause button
+const button_stop = document.querySelector('#stop-music-button')
+multitrack.once('canplay', () => {
+  //button.disabled = false
+  button_stop.onclick = () => {
+    multitrack.stop();
+    setIsPlaying(false)
+    //button.textContent = multitrack.isPlaying() ? 'Pause' : 'Play'
+  }
+})
 // Zoom
 const slider = document.querySelector('input[type="range"]')
 slider.oninput = () => {
@@ -129,9 +156,11 @@ window.onbeforeunload = () => {
 // Set sinkId
 multitrack.once('canplay', async () => {
   await multitrack.setSinkId('')
+
   console.log('Set sinkId to default')
 })
-});
+
+},[isPlaying]);
 
     return (
       <div className='w-100'>

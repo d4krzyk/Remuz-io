@@ -113,7 +113,7 @@ function SoundLib() {
     addSounds(filteredFiles);
   }
   return (
-    <ul className='nav nav-pills flex-column mb-auto'>
+    <ul className='nav px-2 mx-1 nav-pills flex-column mb-auto'>
       <input
         type="file"
         accept="audio/mpeg, audio/wav"

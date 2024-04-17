@@ -1,0 +1,11 @@
+> Dodać interakcje z zoomem i loop przyciskiem
+
+> Dodać czas puszczany
+
+> Zrobic przeciagane dodawanie audio uzywajac zustand
+
+> Zrobić wyswietlanie nazwy dla danej sciezki
+
+> Zrobić usuwanie danej ścieżki
+
+

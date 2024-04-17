@@ -1,19 +1,20 @@
 /* Stylizacja paska przewijania dla WebKit przeglądarek */
 .scroll-track::-webkit-scrollbar {
-    width: 8px; /* Szerokość paska przewijania */
+    width: 15px; /* Szerokość paska przewijania */
     border-color: #ffffff;
     border-width: 3px;
   }
   
   .scroll-track::-webkit-scrollbar-track {
     background: #ffffff; /* Kolor tła toru paska przewijania */
+    border-radius: 0px;
   }
   
   .scroll-track::-webkit-scrollbar-thumb {
     background: #2c56ff; /* Kolor "uchwytu" paska przewijania */
     border-color: #090f25;
     border-width: 3px;
-    border-radius: 3px;
+    border-radius: 0px;
   }
   
   .scroll-track::-webkit-scrollbar-thumb:hover {

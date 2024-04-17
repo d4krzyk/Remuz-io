@@ -4,6 +4,7 @@ import MultiTrackPlayer from './Multitrack/MultiTrackPlayer';
 import NavigationBar from './NavigationBar';
 import SoundLib from './SoundLib/SoundLib';
 import ToolsBar from './Multitrack/ToolsBar';
+import VolumeMeterContainer from './VolumeMeterContainer';
 function DAW() {
   const tracks = [
     { url: '/DAW/flute_melody0.mp3', name: 'flute' },
@@ -14,18 +15,22 @@ function DAW() {
     <div className='d-flex h-100 flex-column'>
       <NavigationBar />
       <div className="cover-container d-flex h-100 p-0 bg-dark">
-        <div style={{ width: '9.5rem' }} className='d-flex flex-column flex-shrink-0 bg-body justify-content-start'>
+        <div style={{ width: '11rem' }} className='d-flex  flex-column flex-shrink-0 bg-body justify-content-start'>
           <SoundLib/>
         </div>
         <div className='d-flex flex-column w-100'>
         <ToolsBar/>
-        <MultiTrackPlayer/>
-        </div>
-        {/*<div className='row'>
         
-        <div className='cover-container text-center w-100 '>
+        <div className='d-flex w-100'>
+       
+        <div id='VolumeMeter' style={{ width: '3.5rem', height: '100%' }} className='d-flex flex-column border-2 flex-shrink-0 justify-content-end'>
+          <VolumeMeterContainer/>
         </div>
-        </div>*/}
+        <div className='flex-grow-1 flex-column mt-0'>
+          <MultiTrackPlayer/>
+        </div>
+      </div>
+        </div>
       </div>
     </div>
   );
