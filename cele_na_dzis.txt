@@ -1,11 +1,15 @@
-> Dodać interakcje z zoomem i loop przyciskiem
 
-> Dodać czas puszczany
+!!!!!!!!!!!!!> Zrobic przeciagane dodawanie audio uzywajac zustand
 
-> Zrobic przeciagane dodawanie audio uzywajac zustand
+!!!!!!!!!> Zrobić usuwanie danej ścieżki
+
+!!!!> Dodać czas puszczany (potrzeba złączonego audio aby to działało)
+
+!!> Dodać interakcje z zoomem i loop przyciskiem
 
 > Zrobić wyswietlanie nazwy dla danej sciezki
 
-> Zrobić usuwanie danej ścieżki
+
+
 
 

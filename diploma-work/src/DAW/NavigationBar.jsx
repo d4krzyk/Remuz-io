@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
-import { Navbar, Nav } from 'react-bootstrap';
+import { Navbar, Nav, Modal, Button, FormControl } from 'react-bootstrap';
 import { Link } from "react-router-dom";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { motion } from 'framer-motion';
 const NavigationBar = () => {
 
   const [isPlaying, setIsPlaying] = useState(false);
+  const [modalShow, setModalShow] = useState(false);
+  const [modalSaveShow, setModalSaveShow] = useState(false);
 
+  const [bpm, setBpm] = useState(140.00);
   function handlePauseMusic() {
     setIsPlaying(!isPlaying)
+  }
+
+  const handleBpmChange = (event) => {
+    setBpm(parseFloat(event.target.value).toFixed(2));
   }
   return (
     <Navbar className=' sticky-top' bg="light" expand="lg">
@@ -31,29 +38,76 @@ const NavigationBar = () => {
                   </motion.div></span>
                 <span className='text-white mx-1 '><i className="bi  bi-arrow-repeat"></i></span >
               </div>
-              <div className='column p-2 d-flex align-content-end bg-dark' style={{ borderTopRightRadius: '8px', borderBottomRightRadius: '8px', borderTopLeftRadius: '0px', borderBottomLeftRadius: '0px' }}>
-                <div className='d-flex justify-content-start text-white me-1 '>140.00</div >
+              <div id='bpm-box' className='column p-2 d-flex align-content-end bg-dark' 
+                style={{ borderTopRightRadius: '8px', borderBottomRightRadius: '8px',
+                borderTopLeftRadius: '0px', borderBottomLeftRadius: '0px' }}
+                onClick={() => setModalShow(true)}>
+                <div id='bpm-value' className='d-flex justify-content-start text-white me-1 '>{bpm}</div >
                 <span className='text-white ms-1 me-0 '>BPM</span >
               </div>
               <div className='column ms-4 p-2 d-flex align-content-end bg-dark rounded-3'>
-                <div className='text-white '>0</div >
+                <div id='hour' className='text-white '>00</div >
                 <span className='text-white mx-1'>:</span >
-                <span className='text-white '>00</span>
+                <span id='minute' className='text-white '>00</span >
                 <span className='text-white mx-1'>:</span >
-                <span className='text-white '>000</span> {/* TU POWINNO BYC GRAY BO TO MINI SEKUNDY */}
+                <span id='seconds' className='text-white '>00</span>
+                <span className='text-white mx-1'>:</span >
+                <span id='miliseconds' className='text-white '>000</span> {/* TU POWINNO BYC GRAY BO TO MINI SEKUNDY */}
                 <span className='text-white mx-1'>SEC</span>
               </div>
 
             </div>
             <div className='d-flex me-3'>
-              <Nav.Link href="#about">File</Nav.Link>
-              <Nav.Link href="#contact">Edit</Nav.Link>
-              <Nav.Link href="#contact">Settings</Nav.Link>
+              <Nav.Link href="#save" onClick={() => setModalSaveShow(true)}>File</Nav.Link>
+              {/* <Nav.Link href="#contact">Edit</Nav.Link>
+              <Nav.Link href="#contact">Settings</Nav.Link> */}
             </div>
           </div>
         </Nav>
       </Navbar.Collapse>
+
+      <Modal
+        show={modalShow}
+        onHide={() => setModalShow(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Zmień BPM</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+            <FormControl
+                type="number"
+                value={bpm}
+                onChange={handleBpmChange}
+              />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setModalShow(false)}>
+            Zamknij
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal
+        show={modalSaveShow}
+        onHide={() => setModalSaveShow(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Zapisz jako...</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className='d-flex flex-column gap-2'>
+          <Button variant="primary" onClick={() => { /* Tutaj dodaj logikę zapisu jako WAV */ }}>
+            Zapisz jako WAV
+          </Button>
+          <Button variant="secondary" onClick={() => { /* Tutaj dodaj logikę zapisu jako MP3 */ }}>
+            Zapisz jako MP3
+          </Button>
+        </Modal.Body>
+      </Modal>
+
     </Navbar>
+
   );
 };
 

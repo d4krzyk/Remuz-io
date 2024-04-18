@@ -3,9 +3,12 @@ import { Routes, Route } from 'react-router-dom';
 import Home from './Home';
 //import About from './Pages/About';
 import DAW from './DAW/DAW';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 const App = () => {
  return (
+  <DndProvider backend={HTML5Backend}>
       <div className='d-flex flex-column' style={{ height: '100svh', overflowX: 'hidden' }}>
             <div className='flex-fill'>
             <Routes>
@@ -15,6 +18,7 @@ const App = () => {
             </Routes>
             </div>
       </div>
+  </DndProvider>
  );
 };
 

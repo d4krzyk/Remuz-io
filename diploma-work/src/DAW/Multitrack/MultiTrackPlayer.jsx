@@ -1,10 +1,16 @@
 import React, { useEffect, useState, useRef } from 'react';
-import Multitrack from './multitrack-module/multitrack.ts';
+import Multitrack from './multitrack-module/multitrack.tsx';
 import './multitrack-module/multitrack.css'
-const MultiTrackPlayer = () => {
+import ToolsStore from './ToolsStore.jsx';
+import { useDrop } from 'react-dnd';
 
+
+const MultiTrackPlayer = () => {
+  const zoomValue = ToolsStore(state => state.zoomValue);
   const initRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [TimeMultiTrack,setTimeMultiTrack] = useState(0)
+
   useEffect( () => {
     if(initRef.current === true) 
       {return}
@@ -19,7 +25,7 @@ const multitrack = Multitrack.create(
       url: 'mocna fagata.mp3',
       draggable: true,
       intro: {
-        label: 'sex',
+        label: 'test',
       }
     },
     {
@@ -105,25 +111,51 @@ multitrack.on('envelope-points-change', ({ id, points }) => {
   console.log(`Track ${id} envelope points updated to`, points)
 })
 
+multitrack.on('audioprocess', () => {
+  setTimeMultiTrack(multitrack.currentTime);
+});
+
+
 multitrack.on('drop', ({ id }) => {
+
+
+
   multitrack.addTrack({
     id,
     url: 'Enejowy pop.mp3',
-    
     startPosition: 0,
     draggable: true,
     options: {
-      waveColor: 'hsl(265, 87%, 49%)',
-      progressColor: 'hsl(265, 87%, 20%)',
+      waveColor: 'hsl(245, 47%, 69%)',
+      progressColor: 'hsl(245, 47%, 40%)',
     },
   })
 })
+// const [, drop] = useDrop({
+//   accept: 'sound',
+//   drop: (item, monitor, trackId) => {
+//     console.log('Dropped item:', item);
+//     multitrack.addTrack({
+//       id: item.id,
+//       url: item.src,
+//       startPosition: 0,
+//       draggable: true,
+//       options: {
+//         waveColor: 'hsl(265, 87%, 49%)',
+//         progressColor: 'hsl(265, 87%, 20%)',
+//       },
+//     });
+//   },
+// });
+
+//console.log(id)
 
 // Play/pause button
 const button_start_pause = document.querySelector('#play-music-button')
 //button.disabled = true
 multitrack.once('canplay', () => {
   //button.disabled = false
+  
   button_start_pause.onclick = () => {
     multitrack.isPlaying() ? multitrack.pause() : multitrack.play()
     setIsPlaying(!isPlaying);
@@ -135,6 +167,7 @@ multitrack.once('canplay', () => {
 const button_stop = document.querySelector('#stop-music-button')
 multitrack.once('canplay', () => {
   //button.disabled = false
+
   button_stop.onclick = () => {
     multitrack.stop();
     setIsPlaying(false)
@@ -144,8 +177,9 @@ multitrack.once('canplay', () => {
 // Zoom
 const slider = document.querySelector('input[type="range"]')
 slider.oninput = () => {
-  multitrack.zoom(slider.valueAsNumber)
+  multitrack.zoom(zoomValue)
 }
+
 
 // Destroy all wavesurfer instances on unmount
 // This should be called before calling initMultiTrack again to properly clean up
@@ -160,7 +194,11 @@ multitrack.once('canplay', async () => {
   console.log('Set sinkId to default')
 })
 
-},[isPlaying]);
+  console.log(zoomValue)
+  multitrack.zoom(zoomValue);
+  
+
+},[zoomValue]);
 
     return (
       <div className='w-100'>

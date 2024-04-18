@@ -12,13 +12,21 @@ import EnvelopePlugin, { type EnvelopePoint, type EnvelopePluginOptions } from '
 import EventEmitter from 'wavesurfer.js/dist/event-emitter.js'
 import { makeDraggable } from 'wavesurfer.js/dist/draggable.js'
 import WebAudioPlayer from './webaudio'
-
+import { useDrop } from 'react-dnd';
 export type TrackId = string | number
 
 type SingleTrackOptions = Omit<
   WaveSurferOptions,
   'container' | 'minPxPerSec' | 'duration' | 'cursorColor' | 'cursorWidth' | 'interact' | 'hideScrollbar'
 >
+
+export type SoundItem = {
+  type: 'sound';
+  id: string;
+  name: string;
+  src: string;
+};
+
 
 export type TrackOptions = {
   id: TrackId
@@ -729,15 +737,35 @@ function initRendering(tracks: MultitrackTracks, options: MultitrackOptions) {
       tracks.forEach((track, index) => {
         if (!(track.url || track.options?.media)) {
           const droppable = containers[index].querySelector('div')
-          droppable?.addEventListener('drop', (e) => {
-            e.preventDefault()
-            onDrop(track.id)
-          })
+          if (droppable) {
+            droppable.addEventListener('dragover', (e) => {
+              e.preventDefault(); // Pozwala na upuszczanie
+            });
+            droppable.addEventListener('drop', (e) => {
+              e.preventDefault();
+              const data = e.dataTransfer?.getData('text/plain');
+              console.log('Drop event triggered');
+              console.log('Data:', data); // Powinno wyświetlić 'This is my div'
+              onDrop(track.id);
+            });
+          } else {
+            console.log('Droppable element not found for index', index);
+          }
         }
       })
+
+      
     },
+
+
+
+    
   }
+  
 }
+
+
+
 
 function initDragging(container: HTMLElement, onDrag: (delta: number) => void, rightButtonDrag = false) {
   let overallWidth = 0

@@ -1,7 +1,49 @@
 import { React, useState, useEffect } from 'react';
+import { useDrag } from 'react-dnd';
 import WaveSurfer from 'wavesurfer.js';
 import { motion } from 'framer-motion';
 import '../../App.css'
+
+function SoundItem({ sound, showSound, currentFileID, isPlaying, togglePlayback, removeSound  }) {
+  
+
+  const [{isDragging}, drag] = useDrag(() => ({
+    type: 'sound',
+    item: { id: sound.id, name: sound.name, src: sound.audioSrc},
+    collect: monitor => ({
+      isDragging: !!monitor.isDragging(),
+    }),
+  }))
+
+  useEffect(() => {
+    // Tutaj możesz użyć zmiennej drag, jeśli jest to konieczne
+  }, []);
+
+  return (
+    <motion.li  key={sound.id}
+            initial='hidden'
+            animate='visible'
+            variants={showSound}
+            id="sound-box"
+            className='nav-item'>
+            <div style={{ opacity: isDragging ? 0.5 : 1}} className='nav-link bg-primary text-white m-1 py-1 px-0'>
+              <div ref={drag} className="d-flex align-items-center justify-content-between p-2" >
+                <motion.div className=' d-inline-flex' whileTap={{ scale: 0.8 }}>
+                  <i className={`bi ${currentFileID === sound.id && isPlaying ? "bi-pause-fill" : "bi-play-fill"}`}
+                    onClick={() => togglePlayback(sound.id)} />
+                </motion.div>
+                <div id={`waveform-container-${sound.id}`} className='flex-grow-1 mx-1 waveform' ></div>
+                <motion.div className=' d-inline-flex' whileTap={{ scale: 0.8 }}>
+                  <i className={`bi text-danger rounded-1 bi-trash-fill`} onClick={() => removeSound(sound.id)} />
+                </motion.div>
+              </div>
+            </div>
+          </motion.li>
+  );
+}
+
+
+
 function SoundLib() {
   const showSound = {
     hidden: {
@@ -18,9 +60,10 @@ function SoundLib() {
   const [currentFileID, setCurrentFileID] = useState(null); // Indeks aktualnie odtwarzanego pliku
   const [isPlaying, setIsPlaying] = useState(false); // Stan odtwarzania
   const [sounds, setSounds] = useState([]); // Lista dźwięków
-
+  
   useEffect(() => {
     sounds.forEach((sound) => {
+
       if (!sound.wavesurfer) {
         const wavesurfer = WaveSurfer.create({
           container: `#waveform-container-${sound.id}`,
@@ -47,6 +90,8 @@ function SoundLib() {
         setSounds(prevSounds => prevSounds.map(s =>
           s.id === sound.id ? { ...s, wavesurfer: wavesurfer } : s
         ));
+
+      
       }
   // Funkcja czyszcząca
   return () => {
@@ -78,6 +123,7 @@ function SoundLib() {
     }
     setSounds(sounds.filter(sound => sound.id !== idToRemove));
   };
+
 
   const togglePlayback = (id) => {
     // Znajdywanie dźwięku na podstawie jego id
@@ -132,26 +178,14 @@ function SoundLib() {
         </motion.label>
       </li>
       <div style={{ maxHeight: '85vh' }} className='mt-2 rounded-2 overflow-y-auto scrollable-sidebar'>
-        {sounds.map(sound => (
-          <motion.li key={sound.id}
-            initial='hidden'
-            animate='visible'
-            variants={showSound}
-            className='nav-item'>
-            <div className='nav-link bg-primary text-white m-1 py-1 px-0'>
-              <div className="d-flex align-items-center justify-content-between p-2" >
-                <motion.div className=' d-inline-flex' whileTap={{ scale: 0.8 }}>
-                  <i className={`bi ${currentFileID === sound.id && isPlaying ? "bi-pause-fill" : "bi-play-fill"}`}
-                    onClick={() => togglePlayback(sound.id)} />
-                </motion.div>
-                <div id={`waveform-container-${sound.id}`} className='flex-grow-1 mx-1 waveform' ></div>
-                <motion.div className=' d-inline-flex' whileTap={{ scale: 0.8 }}>
-                  <i className={`bi text-danger rounded-1 bi-trash-fill`} onClick={() => removeSound(sound.id)} />
-                </motion.div>
-              </div>
-            </div>
-          </motion.li>
-        ))}
+        {sounds.map(sound => <SoundItem 
+              key={sound.id} 
+              sound={sound} 
+              showSound={showSound} 
+              currentFileID={currentFileID} 
+              isPlaying={isPlaying} 
+              togglePlayback={togglePlayback} 
+              removeSound={removeSound} />)}
       </div>
     </ul>
   );
