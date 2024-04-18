@@ -8,12 +8,24 @@ import { useDrop } from 'react-dnd';
 const MultiTrackPlayer = () => {
   const zoomValue = ToolsStore(state => state.zoomValue);
   const initRef = useRef(false);
-  //const [isPlaying, setIsPlaying] = useState(false);
-  //const [TimeMultiTrack,setTimeMultiTrack] = useState(0)
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [TimeMultiTrack,setTimeMultiTrack] = useState(0)
   //const [layerAudio, setLayerAudio] = useState([]);
   const [CurrentLayer, setCurrentLayer] = useState([]);
   const [multitrackInstance, setMultitrackInstance] = useState(null); // przechowujemy instancję multitrack
-
+  const isTrashOption = ToolsStore(state => state.isTrashOption);
+  //console.log(isTrashOption);
+  // Funkcja, która zostanie wywołana po kliknięciu na track
+function handleTrackClick(index,multitrack,isTrashOption) {
+  
+  console.log('Kliknięto na track o id: ' + index);
+  console.log('Opcja usuniecia: ' + isTrashOption);
+    if(isTrashOption){
+      multitrack.removeTrack(index);
+    }
+  // Tutaj umieść kod, który ma się wykonać po kliknięciu
+}
+  //console.log('Opcja usuniecia main: ' + trashOption);
   const [, drop] = useDrop(() => ({
     accept: 'sound',
     drop: async (item, monitor) => {
@@ -40,6 +52,29 @@ const MultiTrackPlayer = () => {
       isOver: !!monitor.isOver(),
     }),
   }),[multitrackInstance,CurrentLayer]);
+
+// Pobierz wszystkie elementy ścieżek
+// let tracks = document.querySelectorAll('.track');
+
+// // Nasłuchiwacz zdarzeń do każdej ścieżki
+// tracks.forEach((track) => {
+//   track.addEventListener('click', function(event) {
+//     // Wywołaj funkcję z id klikniętego tracka
+//     const index = event.currentTarget.getAttribute('data-index');
+
+
+//     handleTrackClick(index,multitrackInstance, isTrashOption);
+//   });
+// });
+
+
+
+// Dodaj nasłuchiwacz zdarzeń do elementu nadrzędnego
+
+
+
+
+
   useEffect( () => {
     if(initRef.current === true) 
       {return}
@@ -51,43 +86,48 @@ const multitrack = Multitrack.create(
   [
     {
       id: 0,
-      url: 'mocna fagata.mp3',
-      draggable: true,
+      startPosition: 0,
       envelope:[
         { time: 0, volume: 1 },
         { time: 60, volume: 1 },
       ],
-      fadeInEnd: 0,
-      intro: {
-        label: 'test',
-      }
+
     },
     {
       id: 1,
+      startPosition: 0,
     },
     {
       id: 2,
+      startPosition: 0,
     },
     {
       id: 3,
+      startPosition: 0,
     },
     {
       id: 4,
+      startPosition: 0,
     },
     {
       id: 5,
+      startPosition: 0,
     },
     {
       id: 6,
+      startPosition: 0,
     },
     {
       id: 7,
+      startPosition: 0,
     },
     {
       id: 8,
+      startPosition: 0,
     },
     {
       id: 9,
+      startPosition: 0,
     },
   ],
   {
@@ -147,16 +187,19 @@ multitrack.on('envelope-points-change', ({ id, points }) => {
   console.log(`Track ${id} envelope points updated to`, points)
 })
 
-multitrack.on('audioprocess', () => {
-  //setTimeMultiTrack(multitrack.currentTime);
-});
 
+setInterval(() => {
+  setTimeMultiTrack(multitrack.currentTime);
+ }, 100);
 
 multitrack.on('drop', async ({ id }) => {
 
   setCurrentLayer(id);
   
 })
+
+
+
 
 
 // Play/pause button
@@ -179,12 +222,13 @@ multitrack.once('canplay', () => {
 
   button_stop.onclick = () => {
     multitrack.stop();
-    //setIsPlaying(false)
+    
     //button.textContent = multitrack.isPlaying() ? 'Pause' : 'Play'
   }
 })
 multitrack.once('decode', () => {
   document.querySelector('input[type="range"]').oninput = (e) => {
+
     multitrack.zoom(Number(zoomValue))
   }
 })
@@ -209,7 +253,31 @@ multitrack.once('canplay', async () => {
   multitrack.zoom(zoomValue);
   
 
-},[zoomValue]);
+},[zoomValue,multitrackInstance]);
+
+
+useEffect(() => {
+
+      
+      // Pobierz wszystkie elementy ścieżek
+      let tracks = document.querySelectorAll('.track');
+
+      function selectIndex(event) {
+        // Wywołaj funkcję z id klikniętego tracka
+        const index = event.currentTarget.getAttribute('data-index');
+        handleTrackClick(index, multitrackInstance, isTrashOption);
+      }
+
+      tracks.forEach((track) => {
+        track.addEventListener('click', selectIndex );
+      });
+      return () => { tracks.forEach((track) => {
+        track.removeEventListener('click', selectIndex );
+      }); }
+
+},[isTrashOption])
+
+console.log(TimeMultiTrack);
 
     return (
       <div className='w-100'>

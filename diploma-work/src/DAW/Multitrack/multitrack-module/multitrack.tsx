@@ -567,6 +567,20 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
       })
     }
   }
+  public removeTrack(trackIndex: string) {
+    
+    const index = parseInt(trackIndex);
+    console.log(typeof(index))
+    console.log('Removing track', index)
+    if (index !== -1) {
+      this.addTrack({ id: index, startPosition: 0, peaks: [new Float32Array(1024)] })
+      //console.log('Tracks', this.tracks)
+    
+
+
+
+    }
+  }
 
   public destroy() {
     if (this.frameRequest) cancelAnimationFrame(this.frameRequest)
@@ -592,6 +606,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
     ;(this.envelopes[index] || this.wavesurfers[index])?.setVolume(volume)
   }
 
+
   public getEnvelopePoints(trackIndex: number): EnvelopePoint[] | undefined {
     return this.envelopes[trackIndex]?.getPoints()
   }
@@ -611,6 +626,7 @@ function initRendering(tracks: MultitrackTracks, options: MultitrackOptions) {
   scroll.setAttribute('style', 'width: 88vw; overflow-x: auto; overflow-y: auto; user-select: none;')
   const wrapper = document.createElement('div')
   scroll.classList.add('scroll-track');
+  wrapper.className = 'tracks-container';
   wrapper.style.position = 'relative'
   scroll.style.maxHeight = '89vh';
   scroll.appendChild(wrapper)
@@ -629,11 +645,12 @@ function initRendering(tracks: MultitrackTracks, options: MultitrackOptions) {
     
     const container = document.createElement('div')
 
-    
+    container.className = 'track';
     container.style.position = 'relative'
+
+    // Ustaw atrybut data-index na id tracka
+    container.setAttribute('data-index', index.toString());
     // Add button only if there's audio associated with the track
-
-
     if (track.id === PLACEHOLDER_TRACK.id) {
       container.style.display = 'none'
     }

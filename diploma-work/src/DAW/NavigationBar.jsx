@@ -18,7 +18,7 @@ const NavigationBar = () => {
     setBpm(parseFloat(event.target.value).toFixed(2));
   }
   return (
-    <Navbar className=' sticky-top' bg="light" expand="lg">
+    <Navbar className=' sticky-top' bg="light" expand="sm">
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav ms-0">
         <Nav className="mr-auto collapse navbar-collapse">

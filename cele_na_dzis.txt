@@ -1,13 +1,11 @@
 
-!!!!!!!!!!!!!> Zrobic przeciagane dodawanie audio uzywajac zustand
+!!!!!!> Naprawić błąd aby po usunięciu dało się odpalać audio
 
-!!!!!!!!!> Zrobić usuwanie danej ścieżki
 
 !!!!> Dodać czas puszczany (potrzeba złączonego audio aby to działało)
 
 !!> Dodać interakcje z zoomem i loop przyciskiem
 
-> Zrobić wyswietlanie nazwy dla danej sciezki
 
 
 

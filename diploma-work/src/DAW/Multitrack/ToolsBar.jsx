@@ -10,29 +10,34 @@ function ToolsBar() {
   
     const [value, setValue] = useState(middleValue); // Ustawienie wartości początkowej na środek
     
-    const [isSelectOption, setIsSelectOption] = useState(true)
-    const [isCopyFragOption, setIsCopyFragOption] = useState(false)
-    const [isCutFragOption, setIsCutFragOption] = useState(false)
-    const [isDelFragOption, setIsDelFragOption] = useState(false)
-    const [isVolAutoOption, setIsVolAutoOption] = useState(false)
-    const [isTrashOption, setIsTrashOption] = useState(false)
+    const {
+      isSelectOption,
+      setIsSelectOption,
+      isCopyFragOption,
+      setIsCopyFragOption,
+      isCutFragOption,
+      setIsCutFragOption,
+      isDelFragOption,
+      setIsDelFragOption,
+      isVolAutoOption,
+      setIsVolAutoOption,
+      isTrashOption,
+      setIsTrashOption,
+      turnOnOption
+    } = ToolsStore();
 
     const handleChange = (event) => {
+      console.log(isTrashOption);
       setZoomValue(event.target.valueAsNumber);
     };
+
+    
     const { zoomValue, setZoomValue } = ToolsStore(state => ({
       zoomValue: state.zoomValue,
       setZoomValue: state.setZoomValue
     }));
 
-    const turnOnOption = (option) => {
-      setIsSelectOption(option === 'select');
-      setIsCopyFragOption(option === 'copy');
-      setIsCutFragOption(option === 'cut');
-      setIsDelFragOption(option === 'delete');
-      setIsVolAutoOption(option === 'volume');
-      setIsTrashOption(option === 'trash');
-    }
+    
 
     return(
       <Navbar className="d-flex bg-dark-subtle w-100 justify-content-between" style={{ height: '45px' }}>
