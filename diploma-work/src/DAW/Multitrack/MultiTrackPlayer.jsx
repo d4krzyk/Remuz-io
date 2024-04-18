@@ -8,9 +8,38 @@ import { useDrop } from 'react-dnd';
 const MultiTrackPlayer = () => {
   const zoomValue = ToolsStore(state => state.zoomValue);
   const initRef = useRef(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [TimeMultiTrack,setTimeMultiTrack] = useState(0)
+  //const [isPlaying, setIsPlaying] = useState(false);
+  //const [TimeMultiTrack,setTimeMultiTrack] = useState(0)
+  //const [layerAudio, setLayerAudio] = useState([]);
+  const [CurrentLayer, setCurrentLayer] = useState([]);
+  const [multitrackInstance, setMultitrackInstance] = useState(null); // przechowujemy instancję multitrack
 
+  const [, drop] = useDrop(() => ({
+    accept: 'sound',
+    drop: async (item, monitor) => {
+      //await setLayerAudio(item);
+    //console.log(item);
+
+    if (multitrackInstance) { // jeśli instancja multitrack jest dostępna, dodajemy ścieżkę
+      multitrackInstance.addTrack({
+        id: CurrentLayer,
+        url: item.src,
+        startPosition: 0,
+        draggable: true,
+        options: {
+          waveColor: 'hsl(245, 47%, 69%)',
+          progressColor: 'hsl(245, 47%, 40%)',
+        },
+        intro: {
+          label: item.name,
+        }
+      });
+    }
+    },
+    collect: (monitor) => ({
+      isOver: !!monitor.isOver(),
+    }),
+  }),[multitrackInstance,CurrentLayer]);
   useEffect( () => {
     if(initRef.current === true) 
       {return}
@@ -24,6 +53,11 @@ const multitrack = Multitrack.create(
       id: 0,
       url: 'mocna fagata.mp3',
       draggable: true,
+      envelope:[
+        { time: 0, volume: 1 },
+        { time: 60, volume: 1 },
+      ],
+      fadeInEnd: 0,
       intro: {
         label: 'test',
       }
@@ -77,6 +111,8 @@ const multitrack = Multitrack.create(
     },
   },
 )
+setMultitrackInstance(multitrack); // zapisujemy instancję multitrack w stanie
+
 
 // Events
 multitrack.on('start-position-change', ({ id, startPosition }) => {
@@ -112,43 +148,16 @@ multitrack.on('envelope-points-change', ({ id, points }) => {
 })
 
 multitrack.on('audioprocess', () => {
-  setTimeMultiTrack(multitrack.currentTime);
+  //setTimeMultiTrack(multitrack.currentTime);
 });
 
 
-multitrack.on('drop', ({ id }) => {
+multitrack.on('drop', async ({ id }) => {
 
-
-
-  multitrack.addTrack({
-    id,
-    url: 'Enejowy pop.mp3',
-    startPosition: 0,
-    draggable: true,
-    options: {
-      waveColor: 'hsl(245, 47%, 69%)',
-      progressColor: 'hsl(245, 47%, 40%)',
-    },
-  })
+  setCurrentLayer(id);
+  
 })
-// const [, drop] = useDrop({
-//   accept: 'sound',
-//   drop: (item, monitor, trackId) => {
-//     console.log('Dropped item:', item);
-//     multitrack.addTrack({
-//       id: item.id,
-//       url: item.src,
-//       startPosition: 0,
-//       draggable: true,
-//       options: {
-//         waveColor: 'hsl(265, 87%, 49%)',
-//         progressColor: 'hsl(265, 87%, 20%)',
-//       },
-//     });
-//   },
-// });
 
-//console.log(id)
 
 // Play/pause button
 const button_start_pause = document.querySelector('#play-music-button')
@@ -158,7 +167,7 @@ multitrack.once('canplay', () => {
   
   button_start_pause.onclick = () => {
     multitrack.isPlaying() ? multitrack.pause() : multitrack.play()
-    setIsPlaying(!isPlaying);
+    //setIsPlaying(!isPlaying);
     //button.textContent = multitrack.isPlaying() ? 'Pause' : 'Play'
   }
 })
@@ -170,15 +179,17 @@ multitrack.once('canplay', () => {
 
   button_stop.onclick = () => {
     multitrack.stop();
-    setIsPlaying(false)
+    //setIsPlaying(false)
     //button.textContent = multitrack.isPlaying() ? 'Pause' : 'Play'
   }
 })
+multitrack.once('decode', () => {
+  document.querySelector('input[type="range"]').oninput = (e) => {
+    multitrack.zoom(Number(zoomValue))
+  }
+})
 // Zoom
-const slider = document.querySelector('input[type="range"]')
-slider.oninput = () => {
-  multitrack.zoom(zoomValue)
-}
+
 
 
 // Destroy all wavesurfer instances on unmount
@@ -202,7 +213,7 @@ multitrack.once('canplay', async () => {
 
     return (
       <div className='w-100'>
-        <div id="container-multitrack"/>
+        <div ref={drop} id="container-multitrack"/>
       </div>
     );
 };

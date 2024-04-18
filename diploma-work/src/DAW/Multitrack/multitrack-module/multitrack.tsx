@@ -12,7 +12,6 @@ import EnvelopePlugin, { type EnvelopePoint, type EnvelopePluginOptions } from '
 import EventEmitter from 'wavesurfer.js/dist/event-emitter.js'
 import { makeDraggable } from 'wavesurfer.js/dist/draggable.js'
 import WebAudioPlayer from './webaudio'
-import { useDrop } from 'react-dnd';
 export type TrackId = string | number
 
 type SingleTrackOptions = Omit<
@@ -271,6 +270,8 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
           })
           introRegion.element.querySelector('[part*="region-handle-left"]')?.remove()
           ;(introRegion.element.parentElement as HTMLElement).style.mixBlendMode = 'plus-lighter'
+          introRegion.element.style.color = '#cccccc'
+          introRegion.element.style.padding = '0 5px'
           if (track.intro.color) {
             const rightHandle = introRegion.element.querySelector('[part*="region-handle-right"]') as HTMLElement
             if (rightHandle) {
@@ -421,7 +422,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
 
       // Unmute if cue is reached
       const isMuted = newTime < (track.startCue || 0) || newTime > (track.endCue || Infinity)
-      if (isMuted != audio.muted) audio.muted = isMuted
+      if (isMuted !== audio.muted) audio.muted = isMuted
     })
   }
 
@@ -738,14 +739,8 @@ function initRendering(tracks: MultitrackTracks, options: MultitrackOptions) {
         if (!(track.url || track.options?.media)) {
           const droppable = containers[index].querySelector('div')
           if (droppable) {
-            droppable.addEventListener('dragover', (e) => {
-              e.preventDefault(); // Pozwala na upuszczanie
-            });
             droppable.addEventListener('drop', (e) => {
               e.preventDefault();
-              const data = e.dataTransfer?.getData('text/plain');
-              console.log('Drop event triggered');
-              console.log('Data:', data); // Powinno wyświetlić 'This is my div'
               onDrop(track.id);
             });
           } else {

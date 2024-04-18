@@ -36,7 +36,7 @@ const NavigationBar = () => {
                   <motion.div id={'stop-music-button'} className=' d-inline-flex' whileTap={{ scale: 0.6 }} >
                   <i class="bi bi-stop-fill"></i>
                   </motion.div></span>
-                <span className='text-white mx-1 '><i className="bi  bi-arrow-repeat"></i></span >
+                {/* <span className='text-white mx-1 '><i className="bi  bi-arrow-repeat"></i></span > */}
               </div>
               <div id='bpm-box' className='column p-2 d-flex align-content-end bg-dark' 
                 style={{ borderTopRightRadius: '8px', borderBottomRightRadius: '8px',
