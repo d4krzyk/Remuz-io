@@ -2,10 +2,8 @@
 
 !!!!> Integracja volume metera z głośnością
 
-!!!!!!> Dodać interakcje z zoomem i loop przyciskiem
 
-
-!!!!!> Naprawienie błędu usuwania bo po usunieciu czasem id się psują
+!!!!!> Naprawienie błędu usuwania bo tracki dalej zostają ale są niewidzialne
 !!!> Problem że warstwy po usunięciu znikają
 
 

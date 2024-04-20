@@ -13,7 +13,7 @@ const NavigationBar = () => {
   const formattedHour = String(timeHour).padStart(2, '0');
   const formattedMinute = String(timeMinute).padStart(2, '0');
   const formattedSecond = String(timeSecond).padStart(2, '0');
-  const formattedMilisecond = String(timeMilisecond).padStart(3, '0');
+  const formattedMilisecond = String(Math.round(timeMilisecond / 10)).padStart(2, '0');
   //console.log(timeSecond)
   const [bpm, setBpm] = useState(140.00);
   function handlePauseMusic() {
@@ -44,7 +44,7 @@ const NavigationBar = () => {
                   </motion.div></span >
                 <span className='text-white mx-1 '>
                   <motion.div id={'stop-music-button'} className=' d-inline-flex' whileTap={{ scale: 0.6 }} onClick={() => handleStopMusic()} >
-                  <i class="bi bi-stop-fill"></i>
+                  <i className="bi bi-stop-fill"></i>
                   </motion.div></span>
                 {/* <span className='text-white mx-1 '><i className="bi  bi-arrow-repeat"></i></span > */}
               </div>

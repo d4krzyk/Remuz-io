@@ -1,7 +1,7 @@
 import { React, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Navbar, Nav } from 'react-bootstrap';
-import ToolsStore from './ToolsStore';
+import { ToolsStore } from './ToolsStore.tsx';
 function ToolsBar() {
 
     const min = 0;

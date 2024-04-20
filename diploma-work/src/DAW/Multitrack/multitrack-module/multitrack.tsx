@@ -14,6 +14,7 @@ import EventEmitter from 'wavesurfer.js/dist/event-emitter.js'
 import { makeDraggable } from 'wavesurfer.js/dist/draggable.js'
 import WebAudioPlayer from './webaudio'
 import getPlaceholderURL from './placeholderURL.jsx'
+import { ToolsStore } from '../ToolsStore';
 export type TrackId = string | number
 
 type SingleTrackOptions = Omit<
@@ -199,6 +200,8 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
   private initWavesurfer(track: TrackOptions, index: number): WaveSurfer {
     const container = this.rendering.containers[index]
 
+
+
     // Create a wavesurfer instance
     const ws = WaveSurfer.create({
       ...track.options,
@@ -309,15 +312,20 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
       }),
     )
 
+    
     if (track.envelope) {
       // Envelope
+      
       const envelope = ws.registerPlugin(
         EnvelopePlugin.create({
           ...this.options.envelopeOptions,
           volume: track.volume,
+          lineColor: 'hsla(163, 95%, 33%, 0.9)',
+          dragPointSize: 15,
+          lineWidth: '4',
         }),
       )
-
+      
       if (Array.isArray(track.envelope)) {
         envelope.setPoints(track.envelope)
       }
@@ -356,8 +364,9 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         envelope.on('volume-change', (volume) => {
           this.emit('volume-change', { id: track.id, volume })
         }),
-
+        
         envelope.on('points-change', (points) => {
+          
           const fadeIn = points.find((point) => point.id === 'fadeInEnd')
           if (fadeIn && fadeIn.time !== prevFadeInEnd) {
             this.emit('fade-in-change', { id: track.id, fadeInEnd: fadeIn.time })
@@ -371,6 +380,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
           }
 
           this.emit('envelope-points-change', { id: track.id, points })
+          
         }),
 
         this.on('start-cue-change', ({ id, startCue }) => {

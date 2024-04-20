@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Multitrack from './multitrack-module/multitrack.tsx';
 import './multitrack-module/multitrack.css'
-import ToolsStore from './ToolsStore.jsx';
+import { ToolsStore } from './ToolsStore.tsx';
 import { useDrop } from 'react-dnd';
 import NavStore from '../NavigationStore.jsx';
 import { Modal, Button } from 'react-bootstrap';
@@ -130,118 +130,87 @@ const MultiTrackPlayer = () => {
 
 
   useEffect(() => {
-    if (initRef.current === true) { return }
-    initRef.current = true;
+    
 
+    if(!multitrackInstance){
+      if (initRef.current === true) { return }
+      initRef.current = true;
+    const temp_containerHTML = document.querySelector('#container-multitrack');
     // Call Multitrack.create to initialize a multitrack mixer
     // Pass a tracks array and WaveSurfer options with a container element
-    const multitrack = Multitrack.create(
-      [
-        {
-          id: 0,
-          startPosition: 0,
-        },
-        {
-          id: 1,
-          startPosition: 0,
-        },
-        {
-          id: 2,
-          startPosition: 0,
-        },
-        {
-          id: 3,
-          startPosition: 0,
-        },
-        {
-          id: 4,
-          startPosition: 0,
-        },
-        {
-          id: 5,
-          startPosition: 0,
-        },
-        {
-          id: 6,
-          startPosition: 0,
-        },
-        {
-          id: 7,
-          startPosition: 0,
-        },
-        {
-          id: 8,
-          startPosition: 0,
-        },
-        {
-          id: 9,
-          startPosition: 0,
-        },
-      ],
-      {
-        container: document.querySelector('#container-multitrack'), // required!
-        minPxPerSec: 50, // zoom level
-        rightButtonDrag: false, // set to true to drag with right mouse button
-        cursorWidth: 4,
-        cursorColor: '#6c75f0',
-        trackBackground: '#3d3c66',
-        trackBorderColor: '#424569',
-        dragBounds: true,
-        envelopeOptions: {
-          lineColor: 'rgba(255, 0, 0, 0.7)',
-          lineWidth: 3,
-          dragPointSize: window.innerWidth < 600 ? 20 : 10,
-          dragPointFill: 'rgba(255, 255, 255, 0.8)',
-          dragPointStroke: 'rgba(255, 255, 255, 0.3)',
-        },
-        timelineOptions: {
-          height: 20,
-        },
+    setMultitrackInstance(Multitrack.create(
+    [
+      {id: 0,startPosition: 0,},{id: 1,startPosition: 0,},
+      {id: 2,startPosition: 0,},{id: 3,startPosition: 0,},
+      {id: 4,startPosition: 0,},{id: 5,startPosition: 0,},
+      {id: 6,startPosition: 0,},{id: 7,startPosition: 0,},
+      {id: 8,startPosition: 0,},{id: 9,startPosition: 0,},
+    ],
+    {
+      container: temp_containerHTML, // required!
+      minPxPerSec: 50, // zoom level
+      rightButtonDrag: false, // set to true to drag with right mouse button
+      cursorWidth: 4,
+      cursorColor: '#6c75f0',
+      trackBackground: '#3d3c66',
+      trackBorderColor: '#424569',
+      dragBounds: true,
+      envelopeOptions: {
+        lineColor: 'rgba(255, 0, 0, 0.7)',
+        lineWidth: 3,
+        dragPointSize: window.innerWidth < 600 ? 20 : 10,
+        dragPointFill: 'rgba(255, 255, 255, 0.8)',
+        dragPointStroke: 'rgba(255, 255, 255, 0.3)',
       },
-    )
-    setMultitrackInstance(multitrack); // zapisujemy instancję multitrack w stanie
+      timelineOptions: {
+        height: 20,
+      },
+    },
+  ));
+  }
+  else{
 
 
     // Events
-    multitrack.on('start-position-change', ({ id, startPosition }) => {
+    multitrackInstance.on('start-position-change', ({ id, startPosition }) => {
       setSelectedTrackPosition(startPosition);
       console.log(`Track ${id} start position updated to ${startPosition}`)
     })
 
-    multitrack.on('start-cue-change', ({ id, startCue }) => {
+    multitrackInstance.on('start-cue-change', ({ id, startCue }) => {
       console.log(`Track ${id} start cue updated to ${startCue}`)
     })
 
-    multitrack.on('end-cue-change', ({ id, endCue }) => {
+    multitrackInstance.on('end-cue-change', ({ id, endCue }) => {
       console.log(`Track ${id} end cue updated to ${endCue}`)
     })
 
-    multitrack.on('volume-change', ({ id, volume }) => {
+    multitrackInstance.on('volume-change', ({ id, volume }) => {
       console.log(`Track ${id} volume updated to ${volume}`)
     })
 
-    multitrack.on('fade-in-change', ({ id, fadeInEnd }) => {
+    multitrackInstance.on('fade-in-change', ({ id, fadeInEnd }) => {
       console.log(`Track ${id} fade-in updated to ${fadeInEnd}`)
     })
 
-    multitrack.on('fade-out-change', ({ id, fadeOutStart }) => {
+    multitrackInstance.on('fade-out-change', ({ id, fadeOutStart }) => {
       console.log(`Track ${id} fade-out updated to ${fadeOutStart}`)
     })
 
-    multitrack.on('intro-end-change', ({ id, endTime }) => {
+    multitrackInstance.on('intro-end-change', ({ id, endTime }) => {
       console.log(`Track ${id} intro end updated to ${endTime}`)
     })
 
-    multitrack.on('envelope-points-change', ({ id, points }) => {
+    multitrackInstance.on('envelope-points-change', ({ id, points }) => {
       console.log(`Track ${id} envelope points updated to`, points)
     })
-
+    //setMultitrackInstance(multitrack); // zapisujemy instancję multitrack w stanie
 
     let intervalTime = setInterval(() => {
-      setTimeMultiTrack(multitrack.currentTime);
+      setTimeMultiTrack(multitrackInstance.currentTime);
     }, 10);
 
-    multitrack.on('drop', async ({ id }) => {
+    multitrackInstance.on('drop', async ({ id }) => {
 
       setCurrentLayer(id);
 
@@ -254,13 +223,13 @@ const MultiTrackPlayer = () => {
     // Play/pause button
     const button_start_pause = document.querySelector('#play-music-button')
 
-    multitrack.once('canplay', () => {
+    multitrackInstance.once('canplay', () => {
       button_start_pause.onclick = async () => {
-        if (multitrack.isPlaying()) {
-          multitrack.pause();
+        if (multitrackInstance.isPlaying()) {
+          multitrackInstance.pause();
         } else {
           try {
-            await multitrack.play();
+            await multitrackInstance.play();
           } catch (error) {
             console.error("Error playing audio: ", error);
           }
@@ -271,9 +240,9 @@ const MultiTrackPlayer = () => {
     // Stop button
     const button_stop = document.querySelector('#stop-music-button')
 
-    multitrack.once('canplay', () => {
+    multitrackInstance.once('canplay', () => {
       button_stop.onclick = () => {
-        multitrack.stop();
+        multitrackInstance.stop();
       }
     })
 
@@ -283,11 +252,11 @@ const MultiTrackPlayer = () => {
     const slider = document.getElementById('ZoomRange');
     if (slider) {
       slider.oninput = (e) => {
-        multitrack.zoom(e.target.valueAsNumber);
+        multitrackInstance.zoom(e.target.valueAsNumber);
       }
     }
 
-    multitrack.once('decode', () => {
+    multitrackInstance.once('decode', () => {
       
     })
     // Zoom
@@ -299,23 +268,25 @@ const MultiTrackPlayer = () => {
     window.onbeforeunload = () => {
       clearInterval(intervalTime);
       setTimeMultiTrack(0);
-      multitrack.destroy()
+      multitrackInstance.destroy()
     }
 
     // Set sinkId
-    multitrack.once('canplay', async () => {
-      await multitrack.setSinkId('')
+    multitrackInstance.once('canplay', async () => {
+      await multitrackInstance.setSinkId('')
 
       console.log('Set sinkId to default')
     })
 
+    console.log('Multitrack instance created', multitrackInstance);
+    }
 
-  }, [ multitrackInstance]);
+  }, [ multitrackInstance, layerAudioSrc, layerDurations, layerName, CurrentLayer, setTimeMultiTrack]);
 
 
   useEffect(() => {
 
-
+    //console.log('Zmiana stanu w multitracku: ' + multitrackInstance);
     // Pobierz wszystkie elementy ścieżek
     let tracks = document.querySelectorAll('.track');
 
@@ -336,7 +307,7 @@ const MultiTrackPlayer = () => {
 
 
 
-  }, [isTrashOption,isDelFragOption, layerAudioSrc, selectedTrackId, layerDurations, layerName, multitrackInstance, selectedTrackPosition]);
+  }, [handleDelFragOption, isTrashOption,isDelFragOption, layerAudioSrc, selectedTrackId, layerDurations, layerName, multitrackInstance, selectedTrackPosition]);
 
 
 
