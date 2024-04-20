@@ -1,13 +1,11 @@
 
-!!!!!!> Naprawić błąd aby po usunięciu dało się odpalać audio
+
+!!!!> Integracja volume metera z głośnością
+
+!!!!!!> Dodać interakcje z zoomem i loop przyciskiem
 
 
-!!!!> Dodać czas puszczany (potrzeba złączonego audio aby to działało)
-
-!!> Dodać interakcje z zoomem i loop przyciskiem
-
-
-
-
+!!!!!> Naprawienie błędu usuwania bo po usunieciu czasem id się psują
+!!!> Problem że warstwy po usunięciu znikają
 
 

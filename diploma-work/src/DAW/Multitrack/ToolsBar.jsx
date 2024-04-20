@@ -5,37 +5,27 @@ import ToolsStore from './ToolsStore';
 function ToolsBar() {
 
     const min = 0;
-    const max = 20;
+    const max = 100;
     const middleValue = min + (max - min) / 2; // Obliczenie wartości środkowej
   
-    const [value, setValue] = useState(middleValue); // Ustawienie wartości początkowej na środek
+    
     
     const {
       isSelectOption,
-      setIsSelectOption,
       isCopyFragOption,
-      setIsCopyFragOption,
       isCutFragOption,
-      setIsCutFragOption,
       isDelFragOption,
-      setIsDelFragOption,
       isVolAutoOption,
-      setIsVolAutoOption,
       isTrashOption,
-      setIsTrashOption,
       turnOnOption
     } = ToolsStore();
 
     const handleChange = (event) => {
-      console.log(isTrashOption);
       setZoomValue(event.target.valueAsNumber);
     };
 
     
-    const { zoomValue, setZoomValue } = ToolsStore(state => ({
-      zoomValue: state.zoomValue,
-      setZoomValue: state.setZoomValue
-    }));
+    const [ zoomValue, setZoomValue ] = useState(middleValue); 
 
     
 

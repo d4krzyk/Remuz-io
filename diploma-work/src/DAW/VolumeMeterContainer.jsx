@@ -1,5 +1,5 @@
 
-
+import VolumeMeterStore from "./VolumeMeterStore";
 import { useEffect, useRef, useState, useMemo } from "react";
 const webAudioPeakMeter = require('web-audio-peak-meter');
 
@@ -14,6 +14,8 @@ export default function VolumeMeterContainer() {
 
   useEffect(() => {
     if (audioElem.current && !sourceNode.current) {
+      //audioElem.current.srcObject = VolumeMeterStore.audio; // Użyj audio z VolumeMeterStore jako źródła
+
       sourceNode.current = audioCtx.createMediaElementSource(audioElem.current);
       sourceNode.current.connect(audioCtx.destination);
 
@@ -33,7 +35,7 @@ export default function VolumeMeterContainer() {
   return (
     <>
       <div ref={myMeterElement} style={{ height: '100%'}}  id='volume-peak-meter'/>
-      <audio ref={audioElem} src={'mocna fagata.mp3'} preload="auto" ></audio>
+      <audio ref={audioElem} preload="auto" ></audio>
 
     </>
   );

@@ -1,5 +1,5 @@
 // store.js
-import create from 'zustand';
+import { create } from 'zustand';
 
 const ToolsStore = create(set => ({
       isSelectOption: true,
@@ -27,9 +27,6 @@ const ToolsStore = create(set => ({
         isVolAutoOption: option === 'volume',
         isTrashOption: option === 'trash',
       })),
-  
-      zoomValue: 10, // Domyślna wartość zoom
-      setZoomValue: (zoom) => set({ zoomValue: zoom }),
 }));
 
 export default ToolsStore;

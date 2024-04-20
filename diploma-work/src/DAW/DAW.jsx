@@ -6,10 +6,7 @@ import SoundLib from './SoundLib/SoundLib';
 import ToolsBar from './Multitrack/ToolsBar';
 import VolumeMeterContainer from './VolumeMeterContainer';
 function DAW() {
-  const tracks = [
-    { url: '/DAW/flute_melody0.mp3', name: 'flute' },
-    // Dodaj więcej ścieżek według potrzeb
-  ];
+
 
   return (
     <div className='d-flex h-100 flex-column'>
@@ -21,7 +18,7 @@ function DAW() {
         <div className='d-flex flex-column w-100'>
         <ToolsBar/>
         
-        <div className='d-flex w-100'>
+        <div className='d-flex w-100 h-100'>
        
         <div id='VolumeMeter' style={{ width: '3.5rem', height: '100%' }} className='d-flex flex-column border-2 flex-shrink-0 justify-content-end'>
           <VolumeMeterContainer/>

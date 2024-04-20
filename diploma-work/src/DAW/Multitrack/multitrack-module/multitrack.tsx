@@ -4,6 +4,7 @@
  * They can be dragged to set their start position.
  * The top track is meant for dragging'n'dropping an additional track id (not a file).
  */
+
 import './multitrack.css';
 import WaveSurfer, { type WaveSurferOptions } from 'wavesurfer.js'
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.js'
@@ -12,6 +13,7 @@ import EnvelopePlugin, { type EnvelopePoint, type EnvelopePluginOptions } from '
 import EventEmitter from 'wavesurfer.js/dist/event-emitter.js'
 import { makeDraggable } from 'wavesurfer.js/dist/draggable.js'
 import WebAudioPlayer from './webaudio'
+import getPlaceholderURL from './placeholderURL.jsx'
 export type TrackId = string | number
 
 type SingleTrackOptions = Omit<
@@ -19,12 +21,6 @@ type SingleTrackOptions = Omit<
   'container' | 'minPxPerSec' | 'duration' | 'cursorColor' | 'cursorWidth' | 'interact' | 'hideScrollbar'
 >
 
-export type SoundItem = {
-  type: 'sound';
-  id: string;
-  name: string;
-  src: string;
-};
 
 
 export type TrackOptions = {
@@ -80,13 +76,19 @@ export type MultitrackEvents = {
 
 export type MultitrackTracks = Array<TrackOptions>
 
+
+
+
+
 const PLACEHOLDER_TRACK = {
   id: 'placeholder',
-  url: 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV',
+  url: getPlaceholderURL(),
+  //url: 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU2LjQxAAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV',
   peaks: [[0]],
   startPosition: 0,
   options: { height: 0 },
 }
+
 
 class MultiTrack extends EventEmitter<MultitrackEvents> {
   private tracks: MultitrackTracks
@@ -101,6 +103,8 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
   private frameRequest: number | null = null
   private subscriptions: Array<() => void> = []
   private audioContext: AudioContext
+
+  
 
   static create(tracks: MultitrackTracks, options: MultitrackOptions): MultiTrack {
     return new MultiTrack(tracks, options)
@@ -123,6 +127,8 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
     this.rendering.addDropHandler((trackId: TrackId) => {
       this.emit('drop', { id: trackId })
     })
+
+
 
     this.initAllAudios().then((durations) => {
       this.initDurations(durations)
@@ -147,6 +153,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
       this.emit('canplay')
     })
   }
+
 
   private initDurations(durations: number[]) {
     this.durations = durations
@@ -291,9 +298,11 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
           track.markers.forEach((marker) => {
             wsRegions.addRegion({
               start: marker.time,
+              end: marker.time + 2,
               content: marker.label,
+              minLength: 0,
               color: marker.color,
-              resize: false,
+              //resize: false,
             })
           })
         }
@@ -408,21 +417,21 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
       const duration = this.durations[index]
       const newTime = time - track.startPosition
 
-      if (Math.abs(audio.currentTime - newTime) > precisionSeconds) {
+      if (audio && Math.abs(audio.currentTime - newTime) > precisionSeconds) {
         audio.currentTime = Math.max(0, newTime)
       }
 
       // If the position is out of the track bounds, pause it
       if (isPaused || newTime < 0 || newTime > duration) {
-        !audio.paused && audio.pause()
+        audio && !audio.paused && audio.pause()
       } else if (!isPaused) {
         // If the position is in the track bounds, play it
-        audio.paused && audio.play()
+        audio && audio.paused && audio.play()
       }
 
       // Unmute if cue is reached
       const isMuted = newTime < (track.startCue || 0) || newTime > (track.endCue || Infinity)
-      if (isMuted !== audio.muted) audio.muted = isMuted
+      if (audio && isMuted !== audio.muted) audio.muted = isMuted
     })
   }
 
@@ -488,24 +497,41 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
     if (this.audioContext && this.audioContext.state === 'suspended') {
       this.audioContext.resume()
     }
-
+  
     this.startSync()
-
+  
     const indexes = this.findCurrentTracks()
     indexes.forEach((index) => {
-      this.audios[index]?.play()
+    if (this.audios[index]) {
+      const playPromise = this.audios[index].play();
+      if (playPromise !== undefined) {
+        playPromise.then(_ => {
+          // Automatic playback started!
+          // Show playing UI.
+        })
+        .catch(error => {
+          // Auto-play was prevented
+          // Show paused UI.
+          console.error("Error playing audio: ", error, " audio id: ", index);
+        });
+      }
+    }
+  })
+}
+  
+  public pause() {
+    this.audios.forEach((audio) => {
+      if (!audio.paused) {
+        audio.pause()
+      }
     })
   }
   
-
-
-  public pause() {
-    this.audios.forEach((audio) => audio.pause())
-  }
   public stop() {
     this.audios.forEach((audio) => {
-      audio.pause();
-      
+      if (!audio.paused) {
+        audio.pause();
+      }
       audio.currentTime = 0; // Ustawienie czasu audio na początek
     });
     this.updatePosition(0,false)
@@ -562,24 +588,125 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
           this.options.rightButtonDrag,
         )
         this.wavesurfers[index].once('destroy', unsubscribe)
-
+        this.stop()
+        this.setTime(0);
         this.emit('canplay')
       })
     }
   }
-  public removeTrack(trackIndex: string) {
+  public removeTrack(trackId: string) {
     
-    const index = parseInt(trackIndex);
-    console.log(typeof(index))
-    console.log('Removing track', index)
-    if (index !== -1) {
-      this.addTrack({ id: index, startPosition: 0, peaks: [new Float32Array(1024)] })
+    const track_ID = parseInt(trackId);
+    
+    if (track_ID !== -1 && this.tracks[track_ID]?.url) {
+      console.log('Removing track', track_ID)
+      //this.addTrack({ id: index, startPosition: 0, peaks: [new Float32Array(1024)] })
       //console.log('Tracks', this.tracks)
-    
+      const track = {
+        id: 'placeholder',
+        url: getPlaceholderURL(),
+        peaks: [[0]],
+        startPosition: 0,
+        options: { height: 0 },
+      }
+      //const track = { id: track_ID, startPosition: 0, peaks: [new Float32Array(1024)] }
+      this.tracks[track_ID] = track
+      this.addTrack(track)
+      this.initAudio(track).then((audio) => {
+        this.audios[track_ID] = audio
+        this.durations[track_ID] = audio.duration
+        this.initDurations(this.durations)
 
+        const container = this.rendering.containers[track_ID]
+        const dropArea = document.createElement('div')
+      dropArea.setAttribute(
+        'style',
+        `position: absolute; z-index: 10; left: 10px; top: 10px; right: 10px; bottom: 10px; border: 2px dashed ${this.options.trackBorderColor};`,
+      )
+      dropArea.addEventListener('dragover', (e) => {
+        e.preventDefault()
+        dropArea.style.background = this.options.trackBackground || ''
+      })
+      dropArea.addEventListener('dragleave', (e) => {
+        e.preventDefault()
+        dropArea.style.background = ''
+      })
+      dropArea.addEventListener('drop', (e) => {
+        e.preventDefault()
+        dropArea.style.background = ''
+      })
+        //container.innerHTML = dropArea.outerHTML
+        const borderDiv = container.nextElementSibling;
+        // Check if the next sibling is indeed the border-div
+        if (borderDiv && borderDiv.classList.contains('border-div')) {
+          borderDiv.remove(); // Remove the border-div
+        }
+        container.replaceChild(dropArea, container.childNodes[0])
+
+        this.wavesurfers[track_ID].destroy()
+        this.wavesurfers[track_ID] = this.initWavesurfer(track, track_ID)
+
+        const unsubscribe = initDragging(
+          container,
+          (delta: number) => this.onDrag(track_ID, delta),
+          this.options.rightButtonDrag,
+        )
+        this.wavesurfers[track_ID].once('destroy', unsubscribe)
+
+        this.addTrack({ id: track_ID, 
+        url: getPlaceholderURL(),
+        startPosition: 0,
+        peaks: [[0]],
+        })
+        
+        this.tracks[track_ID] = {
+          id: track_ID,
+          startPosition: 0,
+          peaks: [[0]],
+        }
+        while (container.firstChild) {
+          container.removeChild(container.firstChild);
+        }
+
+        this.stop()
+        this.setTime(0);
+        this.durations[track_ID] = 0;
+      
+        this.currentTime = 0;
+
+        this.emit('canplay')
+
+
+      })
 
 
     }
+  }
+
+
+  public getAudioTrackCombined() {
+    // const audioContext = new (window.AudioContext)();
+    // const tracksBuffers = this.tracks.map(track => {
+    //   const source = audioContext.createBufferSource();
+      
+    //   source.buffer = this.audios[parseInt(track.id)]; // Zakładam, że track.audio jest buforem audio
+    //   return { source, delay: track.startPosition }; // Zakładam, że track.delay jest opóźnieniem
+    // });
+  
+    // const maxDelay = Math.max(...tracksBuffers.map(t => t.delay));
+    // const output = audioContext.createBuffer(2, maxDelay + Math.max(...tracksBuffers.map(t => t.source.buffer.length)), audioContext.sampleRate);
+  
+    // tracksBuffers.forEach(({ source, delay }) => {
+    //   for (let channel = 0; channel < output.numberOfChannels; channel++) {
+    //     const outputData = output.getChannelData(channel);
+    //     const sourceData = source.buffer.getChannelData(channel);
+    //     for (let i = 0; i < sourceData.length; i++) {
+    //       outputData[i + delay] += sourceData[i];
+    //     }
+    //   }
+    // });
+  
+    // return output;
   }
 
   public destroy() {
@@ -620,7 +747,7 @@ function initRendering(tracks: MultitrackTracks, options: MultitrackOptions) {
   let pxPerSec = 0
   let durations: number[] = []
   let mainWidth = 0
-  
+  //getEncodedPlaceholderURL().then(data => console.log(data));
   // Create a common container for all tracks
   const scroll = document.createElement('div')
   scroll.setAttribute('style', 'width: 88vw; overflow-x: auto; overflow-y: auto; user-select: none;')
@@ -648,8 +775,8 @@ function initRendering(tracks: MultitrackTracks, options: MultitrackOptions) {
     container.className = 'track';
     container.style.position = 'relative'
 
-    // Ustaw atrybut data-index na id tracka
-    container.setAttribute('data-index', index.toString());
+    // Atrybut data-id na id tracka
+    container.setAttribute('track-id', track.id.toString());
     // Add button only if there's audio associated with the track
     if (track.id === PLACEHOLDER_TRACK.id) {
       container.style.display = 'none'
@@ -657,6 +784,7 @@ function initRendering(tracks: MultitrackTracks, options: MultitrackOptions) {
 
     if (options.trackBorderColor && index > 0) {
       const borderDiv = document.createElement('div')
+      borderDiv.className = 'border-div';
       borderDiv.setAttribute('style', `width: 100%; height: 2px; background-color: ${options.trackBorderColor}`)
       wrapper.appendChild(borderDiv)
     }

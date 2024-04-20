@@ -9,7 +9,7 @@ function SoundItem({ sound, showSound, currentFileID, isPlaying, togglePlayback,
 
   const [{isDragging}, drag] = useDrag(() => ({
     type: 'sound',
-    item: { id: sound.id, name: sound.name, src: sound.audioSrc},
+    item: { id: sound.id, name: sound.name, src: sound.audioSrc, duration: sound.duration},
     collect: monitor => ({
       isDragging: !!monitor.isDragging(),
     }),
@@ -103,13 +103,24 @@ function SoundLib() {
     });
   }, [sounds]);
 
-  const addSounds = (newFiles) => {
+  const addSounds = async (newFiles) => {
     // Tworzenie tablicy nowych dźwięków
-    const newSounds = newFiles.map(file => ({
-      id: (Date.now() + Math.random()).toString().replace('.', '-'),
-      name: file.name,
-      audioSrc: URL.createObjectURL(file),
-      isPlaying: false,
+    const newSounds = await Promise.all(newFiles.map(async file => {
+      return new Promise((resolve, reject) => {
+        const audio = new Audio(URL.createObjectURL(file));
+        audio.onloadedmetadata = function() {
+          resolve({
+            id: (Date.now() + Math.random()).toString().replace('.', '-'),
+            name: file.name,
+            audioSrc: URL.createObjectURL(file),
+            isPlaying: false,
+            duration: Math.round(audio.duration),
+          });
+        };
+        audio.onerror = function() {
+          reject('Error loading audio file');
+        };
+      });
     }));
 
     // Aktualizacja stanu
