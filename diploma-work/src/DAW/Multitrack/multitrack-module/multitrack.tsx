@@ -577,11 +577,15 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
   }
 
   public addTrack(track: TrackOptions) {
+    console.log("id:", this.tracks.findIndex((t) => t.id === track.id ) )
     const index = this.tracks.findIndex((t) => t.id === track.id)
+    console.log("inde:", index )
     if (index !== -1) {
+      console.log("before init track")
       this.tracks[index] = track
-
+        console.log("before init audio")
       this.initAudio(track).then((audio) => {
+        console.log("under init audio")
         this.audios[index] = audio
         this.durations[index] = audio.duration
         this.initDurations(this.durations)
@@ -600,8 +604,10 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         this.wavesurfers[index].once('destroy', unsubscribe)
         this.stop()
         this.setTime(0);
+        console.log("wykonano super dodanie")
         this.emit('canplay')
       })
+      console.log("after init audio")
     }
   }
   public removeTrack(trackId: string) {
@@ -686,13 +692,13 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
 
         this.emit('canplay')
 
-
       })
 
 
     }
   }
 
+  
 
   public getAudioTrackCombined() {
     // const audioContext = new (window.AudioContext)();
@@ -733,6 +739,8 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
       ws.destroy()
     })
   }
+
+  
 
   // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
   public setSinkId(sinkId: string): Promise<void[]> {

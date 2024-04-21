@@ -24,33 +24,14 @@ const MultiTrackPlayer = () => {
   };
 
 
-  const handleDelFragOption = () => {
-    console.log('Usunięto fragment');
-    console.log(selectedTrackId, layerAudioSrc[selectedTrackId], selectedTrackPosition, layerName[selectedTrackId]);
-    multitrackInstance.stop();
-    multitrackInstance.addTrack({
-      id: selectedTrackId,
-      url: layerAudioSrc[selectedTrackId],
-      startPosition: selectedTrackPosition,
-      draggable: false,
-      options: {
-        waveColor: `hsl(25, 47%, 69%)`,
-        progressColor: `hsl(25, 47%, 40%)`,
-      },
-      intro: {
-        label: layerName[selectedTrackId] + ' - fragment usunięty',
-      },
-      envelope: [],
-      markers: [DeleteMarkerParams]
-    });
-  }
+  
 
   
   const initRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const {TimeMultiTrack, setTimeMultiTrack } = NavStore();
   const [selectedTrackId, setSelectedTrackId] = useState(null);
-  const [selectedTrackPosition, setSelectedTrackPosition] = useState(null);
+  const [selectedTrackPosition, setSelectedTrackPosition] = useState(0);
   const DeleteMarkerParams = {
     time: 0,
     label: 'Region',
@@ -76,9 +57,7 @@ const MultiTrackPlayer = () => {
     if (isTrashOption) {
       handleTrashShow();
     }
-    if(isDelFragOption){
-      handleDelFragOption();
-    }
+    
 
   }
   //console.log('Opcja usuniecia main: ' + trashOption);
@@ -100,6 +79,7 @@ const MultiTrackPlayer = () => {
         const newLayerDurations = {...layerDurations, [CurrentLayer]: item.duration - 1};
         setLayerDurations(newLayerDurations);
         console.log('Dodano ścieżkę: ', layerAudioSrc[CurrentLayer] );
+        
         multitrackInstance.addTrack({
           id: CurrentLayer,
           url: newLayerAudioSrc[CurrentLayer],
@@ -293,7 +273,11 @@ const MultiTrackPlayer = () => {
     function selectIndex(event) {
       // Wywołaj funkcję z id klikniętego tracka
       const id = event.currentTarget.getAttribute('track-id');
+      if(isDelFragOption){
+        handleDelFragOption();
+      }
       handleTrackClick(id, multitrackInstance);
+      
     }
 
     tracks.forEach((track) => {
@@ -305,9 +289,43 @@ const MultiTrackPlayer = () => {
       });
     }
 
+    function removeBlobPrefix(input) {
+      return input.replace(/^blob:/, '');
+  }
+    function handleDelFragOption() {
+      console.log('Usunięto fragment');
+      console.log(selectedTrackId, layerAudioSrc[selectedTrackId], selectedTrackPosition, layerName[selectedTrackId]);
+      multitrackInstance.stop();
+      if(multitrackInstance.tracks[selectedTrackId]?.startPosition)
+        setSelectedTrackPosition(multitrackInstance.tracks[selectedTrackId].startPosition);
+      if(selectedTrackPosition !== null && selectedTrackId && layerAudioSrc[selectedTrackId] && layerName[selectedTrackId])
+      {
+       multitrackInstance.addTrack({
+        id: multitrackInstance.tracks[selectedTrackId].id,
+        url: multitrackInstance.tracks[selectedTrackId].url,
+        startPosition: multitrackInstance.tracks[selectedTrackId].startPosition,
+        draggable: false,
+        options: {
+          waveColor: `hsl(25, 47%, 69%)`,
+          progressColor: `hsl(25, 47%, 40%)`,
+        },
+        intro: {
+          label: multitrackInstance.tracks[selectedTrackId].intro.label,
+          endTime: 0,
+        },
+        markers: [{
+          time: 0,
+          label: 'Region',
+          color: 'hsla(345, 50%, 30%, 0.7)',
+        }]
+      });
+        }
+      
+    }
+    
 
 
-  }, [handleDelFragOption, isTrashOption,isDelFragOption, layerAudioSrc, selectedTrackId, layerDurations, layerName, multitrackInstance, selectedTrackPosition]);
+  }, [ isTrashOption,isDelFragOption, layerAudioSrc, selectedTrackId, layerDurations, layerName, multitrackInstance, selectedTrackPosition]);
 
 
 

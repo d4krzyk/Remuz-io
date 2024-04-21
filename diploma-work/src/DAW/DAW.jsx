@@ -20,8 +20,8 @@ function DAW() {
         
         <div className='d-flex w-100 h-100'>
        
-        <div id='VolumeMeter' style={{ width: '3.5rem', height: '100%' }} className='d-flex flex-column border-2 flex-shrink-0 justify-content-end'>
-          <VolumeMeterContainer/>
+        <div id='VolumeMeter' style={{ width: '3.5rem', height: '100%' }} className='d-flex bg-dark flex-column border-2 flex-shrink-0 justify-content-end'>
+          {/* <VolumeMeterContainer/> */}
         </div>
         <div className='flex-grow-1 flex-column mt-0'>
           <MultiTrackPlayer/>
