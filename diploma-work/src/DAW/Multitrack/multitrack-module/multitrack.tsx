@@ -40,6 +40,7 @@ export type TrackOptions = {
     time: number
     label?: string
     color?: string
+    end: number
   }>
   intro?: {
     endTime: number
@@ -72,6 +73,7 @@ export type MultitrackEvents = {
   'envelope-points-change': [{ id: TrackId; points: EnvelopePoint[] }]
   'volume-change': [{ id: TrackId; volume: number }]
   'intro-end-change': [{ id: TrackId; endTime: number }]
+  'marker-change': [{ id: TrackId; startMarker: number, endMarker: number }]
   drop: [{ id: TrackId }]
 }
 
@@ -242,13 +244,12 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
             start: 0,
             end: startCue,
             color: 'rgba(0, 0, 0, 0.7)',
-            drag: false,
+
           })
           const endCueRegion = wsRegions.addRegion({
             start: endCue,
             end: this.durations[index],
             color: 'rgba(0, 0, 0, 0.7)',
-            drag: false,
           })
 
           // Allow resizing only from one side
@@ -299,15 +300,34 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         // Render markers
         if (track.markers) {
           track.markers.forEach((marker) => {
-            wsRegions.addRegion({
+            const MarkerRegion = wsRegions.addRegion({
               start: marker.time,
-              end: marker.time + 2,
+              end: marker.end,
               content: marker.label,
               minLength: 0,
               color: marker.color,
               //resize: false,
             })
+            //track.markers[0].start = marker.time;
+            MarkerRegion.element.style.color = '#cccccc'
+
+            this.subscriptions.push(
+              MarkerRegion.on('update-end', () => {
+                if (track.markers && track.markers.length > 0) {
+                  console.log("markery: ", track.markers)
+                  track.markers[0].time = MarkerRegion.start
+                  track.markers[0].end = MarkerRegion.end
+                
+                this.emit('marker-change', {
+                  id: track.id, startMarker: track.markers[0].time as number,
+                  endMarker: track.markers[0].end as number
+                })
+              }
+              }),
+            )
+
           })
+
         }
       }),
     )
@@ -604,7 +624,6 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         this.wavesurfers[index].once('destroy', unsubscribe)
         this.stop()
         this.setTime(0);
-        console.log("wykonano super dodanie")
         this.emit('canplay')
       })
       console.log("after init audio")
@@ -616,83 +635,42 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
     
     if (track_ID !== -1 && this.tracks[track_ID]?.url) {
       console.log('Removing track', track_ID)
-      //this.addTrack({ id: index, startPosition: 0, peaks: [new Float32Array(1024)] })
-      //console.log('Tracks', this.tracks)
-      const track = {
-        id: 'placeholder',
-        url: getPlaceholderURL(),
-        peaks: [[0]],
+      const trackAdd = {
+        id: this.tracks[track_ID].id,
         startPosition: 0,
-        options: { height: 0 },
+        //options: { height: 0 },
       }
-      //const track = { id: track_ID, startPosition: 0, peaks: [new Float32Array(1024)] }
-      this.tracks[track_ID] = track
-      this.addTrack(track)
-      this.initAudio(track).then((audio) => {
-        this.audios[track_ID] = audio
-        this.durations[track_ID] = audio.duration
+      const index = this.tracks.findIndex((t) => t.id === trackAdd.id)
+      console.log("inde:", index )
+    if (index !== -1) {
+        console.log("before init track")
+        this.tracks[index] = trackAdd
+        console.log("before init audio")
+        this.initAudio(PLACEHOLDER_TRACK).then((audio) => {
+        console.log("under init audio")
+        this.audios[index] = audio
+        this.durations[index] = audio.duration
         this.initDurations(this.durations)
 
-        const container = this.rendering.containers[track_ID]
-        const dropArea = document.createElement('div')
-      dropArea.setAttribute(
-        'style',
-        `position: absolute; z-index: 10; left: 10px; top: 10px; right: 10px; bottom: 10px; border: 2px dashed ${this.options.trackBorderColor};`,
-      )
-      dropArea.addEventListener('dragover', (e) => {
-        e.preventDefault()
-        dropArea.style.background = this.options.trackBackground || ''
-      })
-      dropArea.addEventListener('dragleave', (e) => {
-        e.preventDefault()
-        dropArea.style.background = ''
-      })
-      dropArea.addEventListener('drop', (e) => {
-        e.preventDefault()
-        dropArea.style.background = ''
-      })
-        //container.innerHTML = dropArea.outerHTML
-        const borderDiv = container.nextElementSibling;
-        // Check if the next sibling is indeed the border-div
-        if (borderDiv && borderDiv.classList.contains('border-div')) {
-          borderDiv.remove(); // Remove the border-div
-        }
-        container.replaceChild(dropArea, container.childNodes[0])
+        const container = this.rendering.containers[index]
+        container.innerHTML = ''
 
-        this.wavesurfers[track_ID].destroy()
-        this.wavesurfers[track_ID] = this.initWavesurfer(track, track_ID)
-
+        this.wavesurfers[index].destroy()
+        this.wavesurfers[index] = this.initWavesurfer(trackAdd, index)
         const unsubscribe = initDragging(
           container,
-          (delta: number) => this.onDrag(track_ID, delta),
+          (delta: number) => this.onDrag(index, delta),
           this.options.rightButtonDrag,
         )
-        this.wavesurfers[track_ID].once('destroy', unsubscribe)
-
-        this.addTrack({ id: track_ID, 
-        url: getPlaceholderURL(),
-        startPosition: 0,
-        peaks: [[0]],
-        })
-        
-        this.tracks[track_ID] = {
-          id: track_ID,
-          startPosition: 0,
-          peaks: [[0]],
+        this.wavesurfers[index].once('destroy', unsubscribe)
+      })
         }
-        while (container.firstChild) {
-          container.removeChild(container.firstChild);
-        }
-
         this.stop()
         this.setTime(0);
-        this.durations[track_ID] = 0;
-      
         this.currentTime = 0;
-
         this.emit('canplay')
 
-      })
+      //})
 
 
     }

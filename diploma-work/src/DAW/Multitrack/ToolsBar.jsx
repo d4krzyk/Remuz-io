@@ -76,7 +76,7 @@ function ToolsBar() {
           max={max}
           value={zoomValue} // Użycie stanu
           onChange={handleChange} // Aktualizacja wartości
-          step="1"
+          step="0.1"
           id="ZoomRange"
           className="form-range flex-grow-1" style={{ width: '400px' }}
         />

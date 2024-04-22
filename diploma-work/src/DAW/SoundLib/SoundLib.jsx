@@ -114,7 +114,7 @@ function SoundLib() {
             name: file.name,
             audioSrc: URL.createObjectURL(file),
             isPlaying: false,
-            duration: Math.round(audio.duration),
+            duration: parseFloat(audio.duration.toFixed(4)),
           });
         };
         audio.onerror = function() {

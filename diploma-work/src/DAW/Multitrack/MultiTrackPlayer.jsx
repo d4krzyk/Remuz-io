@@ -46,7 +46,7 @@ const MultiTrackPlayer = () => {
   const [layerAudioSrc, setLayerAudioSrc] = useState({});
   const [layerDurations, setLayerDurations] = useState({});
   const [layerName, setLayerName] = useState({});
-
+  const [layerEnvelope, setLayerEnvelope] = useState({});
   //console.log(isTrashOption);
   // Funkcja, która zostanie wywołana po kliknięciu na track
 
@@ -72,17 +72,12 @@ const MultiTrackPlayer = () => {
       const hue = Math.floor(Math.random() * 360);
       if (multitrackInstance) { // jeśli instancja multitrack jest dostępna, dodajemy ścieżkę
         
-        const newLayerAudioSrc = {...layerAudioSrc, [CurrentLayer]: item.src};
-        setLayerAudioSrc(newLayerAudioSrc);
-        const newLayerName = {...layerName, [CurrentLayer]: item.name};
-        setLayerName(newLayerName);
-        const newLayerDurations = {...layerDurations, [CurrentLayer]: item.duration - 1};
-        setLayerDurations(newLayerDurations);
-        console.log('Dodano ścieżkę: ', layerAudioSrc[CurrentLayer] );
+
+        console.log('Dodano ścieżkę: ', item.name, ' o dlugosci ', item.duration );
         
         multitrackInstance.addTrack({
           id: CurrentLayer,
-          url: newLayerAudioSrc[CurrentLayer],
+          url: item.src,
           startPosition: 0,
           draggable: true,
           options: {
@@ -90,11 +85,11 @@ const MultiTrackPlayer = () => {
             progressColor: `hsl(${hue}, 47%, 40%)`,
           },
           intro: {
-            label: newLayerName[CurrentLayer],
+            label: item.name,
           },
           envelope: [
             { time: 0, volume: 1 },
-            { time: newLayerDurations[CurrentLayer], volume: 1 },
+            { time: item.duration - 0.001, volume: 1 },
           ],
           //markers: [DeleteMarkerParams]
         });
@@ -181,7 +176,11 @@ const MultiTrackPlayer = () => {
       console.log(`Track ${id} intro end updated to ${endTime}`)
     })
 
+    multitrackInstance.on('marker-change', ({ id, startTime, endTime }) => {
+      console.log(`Track ${id} marker start and end updated to ${startTime} ${endTime}`)
+    })
     multitrackInstance.on('envelope-points-change', ({ id, points }) => {
+      multitrackInstance.tracks[id].envelope = points;
       console.log(`Track ${id} envelope points updated to`, points)
     })
     //setMultitrackInstance(multitrack); // zapisujemy instancję multitrack w stanie
@@ -261,7 +260,7 @@ const MultiTrackPlayer = () => {
     console.log('Multitrack instance created', multitrackInstance);
     }
 
-  }, [ multitrackInstance, layerAudioSrc, layerDurations, layerName, CurrentLayer, setTimeMultiTrack]);
+  }, [ multitrackInstance, CurrentLayer, setTimeMultiTrack]);
 
 
   useEffect(() => {
@@ -273,11 +272,11 @@ const MultiTrackPlayer = () => {
     function selectIndex(event) {
       // Wywołaj funkcję z id klikniętego tracka
       const id = event.currentTarget.getAttribute('track-id');
-      if(isDelFragOption){
+      if (isDelFragOption) {
         handleDelFragOption();
       }
       handleTrackClick(id, multitrackInstance);
-      
+
     }
 
     tracks.forEach((track) => {
@@ -289,43 +288,49 @@ const MultiTrackPlayer = () => {
       });
     }
 
-    function removeBlobPrefix(input) {
-      return input.replace(/^blob:/, '');
-  }
     function handleDelFragOption() {
       console.log('Usunięto fragment');
-      console.log(selectedTrackId, layerAudioSrc[selectedTrackId], selectedTrackPosition, layerName[selectedTrackId]);
+      //console.log(selectedTrackId, layerAudioSrc[selectedTrackId], selectedTrackPosition, layerName[selectedTrackId]);
       multitrackInstance.stop();
-      if(multitrackInstance.tracks[selectedTrackId]?.startPosition)
+      if (multitrackInstance.tracks[selectedTrackId]?.startPosition)
         setSelectedTrackPosition(multitrackInstance.tracks[selectedTrackId].startPosition);
-      if(selectedTrackPosition !== null && selectedTrackId && layerAudioSrc[selectedTrackId] && layerName[selectedTrackId])
-      {
-       multitrackInstance.addTrack({
-        id: multitrackInstance.tracks[selectedTrackId].id,
-        url: multitrackInstance.tracks[selectedTrackId].url,
-        startPosition: multitrackInstance.tracks[selectedTrackId].startPosition,
-        draggable: false,
-        options: {
-          waveColor: `hsl(25, 47%, 69%)`,
-          progressColor: `hsl(25, 47%, 40%)`,
-        },
-        intro: {
-          label: multitrackInstance.tracks[selectedTrackId].intro.label,
-          endTime: 0,
-        },
-        markers: [{
-          time: 0,
-          label: 'Region',
-          color: 'hsla(345, 50%, 30%, 0.7)',
-        }]
-      });
-        }
-      
+      if (selectedTrackPosition !== null && selectedTrackId) {
+        console.log(multitrackInstance.tracks[selectedTrackId]);
+        if (multitrackInstance.tracks[selectedTrackId]?.url) {
+
+          const newLayerEnvelope = { ...layerEnvelope, [selectedTrackId]: multitrackInstance.tracks[selectedTrackId].envelope };
+          setLayerEnvelope(newLayerEnvelope);
+          multitrackInstance.addTrack({
+            id: multitrackInstance.tracks[selectedTrackId].id,
+            url: multitrackInstance.tracks[selectedTrackId].url,
+            startPosition: multitrackInstance.tracks[selectedTrackId]?.startPosition || 0,
+            draggable: false,
+            options: {
+              waveColor: multitrackInstance.tracks[selectedTrackId].options.waveColor,
+              progressColor: multitrackInstance.tracks[selectedTrackId].options.progressColor,
+            },
+            intro: {
+              label: multitrackInstance.tracks[selectedTrackId]?.intro?.label || '',
+              endTime: 0,
+            },
+            //startCue: multitrackInstance.tracks[selectedTrackId]?.startCue || 1,
+            //endCue: multitrackInstance.tracks[selectedTrackId]?.endCue || 2,
+            markers: [{
+              time: multitrackInstance.tracks[selectedTrackId]?.markers?.time || multitrackInstance?.currentTime || 0,
+              label: 'X Region X',
+              color: 'hsla(345, 50%, 30%, 0.7)',
+              end: multitrackInstance.tracks[selectedTrackId]?.markers?.end || multitrackInstance?.currentTime + 2 || 2
+            }]
+          })
+          //console.log("volume automation: ",newLayerEnvelope[selectedTrackId]);
+        };
+      }
+
     }
-    
 
 
-  }, [ isTrashOption,isDelFragOption, layerAudioSrc, selectedTrackId, layerDurations, layerName, multitrackInstance, selectedTrackPosition]);
+
+  }, [ isTrashOption,isDelFragOption, selectedTrackId, multitrackInstance, layerEnvelope, setLayerEnvelope]);
 
 
 
