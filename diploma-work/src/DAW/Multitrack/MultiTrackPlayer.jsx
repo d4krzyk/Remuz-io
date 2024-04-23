@@ -26,13 +26,14 @@ const MultiTrackPlayer = () => {
   const handleDelFragConfirm = () => {
     setShowDelFragModal(false);
     setIsDeleteConfirmed(false);
+    if(multitrackInstance.tracks[selectedTrackId]?.url){
     multitrackInstance.addTrack({
       id: multitrackInstance.tracks[selectedTrackId].id,
       url: multitrackInstance.tracks[selectedTrackId].url,
       startPosition: selectedTrackPosition,
       draggable: false,
       options: {
-        waveColor: multitrackInstance.tracks[selectedTrackId].options.waveColor,
+        waveColor: multitrackInstance.tracks[selectedTrackId].options.waveColor ,
         progressColor: multitrackInstance.tracks[selectedTrackId].options.progressColor,
       },
       intro: {
@@ -48,9 +49,10 @@ const MultiTrackPlayer = () => {
     });
     setTimeMultiTrack(0);
     multitrackInstance.stop();
+    console.log("wywolanie start i stop", layerMarkerStart[selectedTrackId], layerMarkerEnd[selectedTrackId]);
     multitrackInstance.RemoveSegment(multitrackInstance.tracks[selectedTrackId].id, 
-      multitrackInstance.tracks[selectedTrackId]?.markers?.time, multitrackInstance.tracks[selectedTrackId]?.markers?.end);
-    
+      layerMarkerStart[selectedTrackId], layerMarkerEnd[selectedTrackId]);
+    }
     //initRef.current = false;
   };
   

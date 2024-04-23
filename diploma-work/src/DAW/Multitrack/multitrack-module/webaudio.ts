@@ -10,7 +10,7 @@ class WebAudioPlayer {
   private playStartTime = 0
   private playedDuration = 0
   private _src = ''
-  private _duration = 0
+  private _duration: number | 0 = 0
   private _muted = false
   private buffer: AudioBuffer | null = null
   public paused = true
@@ -177,12 +177,28 @@ class WebAudioPlayer {
 
 
   async removeSegment(startSec: number, endSec: number) {
-    if (!this.buffer) return;
+    if (!this.buffer) 
+      {
+        console.log("No buffer to remove segment from");
+        return;
+      }
+      else{
+        console.log("Buffer exists");
+      }
+      if (typeof startSec !== 'number' || typeof endSec !== 'number') {
+        console.error("Start and end position is NaN", startSec, endSec)
+        return;
+      }
+      const startOffset = Math.round(startSec * this.buffer.sampleRate);
+      const endOffset = Math.round(endSec * this.buffer.sampleRate);
+      const newLength = Math.max(Math.round(this.buffer.length - (endOffset - startOffset)), 1);
 
-    const startOffset = startSec * this.buffer.sampleRate;
-    const endOffset = endSec * this.buffer.sampleRate;
-    const newLength = this.buffer.length - (endOffset - startOffset);
+    console.log("startOffset: ", startOffset, "endOffset: ", endOffset, "newLength: ", newLength);
 
+    if(startOffset < 0 || endOffset > this.buffer.length || startOffset >= endOffset || newLength <= 0) {
+      console.error('Invalid segment range. The start and end offsets must be within the buffer length and the start offset must be less than the end offset.');
+      return;
+    }
     const newBuffer = this.audioContext.createBuffer(
       this.buffer.numberOfChannels,
       newLength,
@@ -201,6 +217,53 @@ class WebAudioPlayer {
 
     //this.emitEvent('modified');
   }
+  get Buffer(): AudioBuffer | null {
+    return this.buffer;
+  }
+  set Buffer(value: AudioBuffer | null) {
+    if (value === null) {
+      console.error('Value is null');
+      return;
+    }
+  
+    this.buffer = value;
+    this._duration = value.duration;
+  }
+
+  async muteSegment(startSec: number, endSec: number) {
+    if (!this.buffer) {
+        console.log("No buffer to process");
+        return;
+    } else {
+        console.log("Buffer exists");
+    }
+
+    if (typeof startSec !== 'number' || typeof endSec !== 'number') {
+        console.error("Start and end position is NaN", startSec, endSec);
+        return;
+    }
+
+    const startOffset = Math.round(startSec * this.buffer.sampleRate);
+    const endOffset = Math.round(endSec * this.buffer.sampleRate);
+
+    if (startOffset < 0 || endOffset > this.buffer.length || startOffset >= endOffset) {
+        console.error('Invalid segment range. The start and end offsets must be within the buffer length and the start offset must be less than the end offset.');
+        return;
+    }
+
+    // Wyciszanie segmentu w każdym kanale
+    for (let channel = 0; channel < this.buffer.numberOfChannels; channel++) {
+        const channelData = this.buffer.getChannelData(channel);
+        for (let i = startOffset; i < endOffset; i++) {
+            channelData[i] = 0; // Ustawienie wartości próbek na 0
+        }
+    }
+
+    console.log("Segment from " + startSec + "s to " + endSec + "s has been muted.");
+    //this.emitEvent('modified');
+}
+
+
 
 
 }

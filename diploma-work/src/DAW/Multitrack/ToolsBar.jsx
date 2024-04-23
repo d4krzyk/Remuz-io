@@ -38,12 +38,12 @@ function ToolsBar() {
           data-toggle="tooltip" data-placement="button" title="Select tool">
           <i className='bi text-dark bi-cursor-fill' />
         </button>
-        <button type="button" 
+        {/* <button type="button" 
         className={`btn py-0 px-1 ${isCopyFragOption ? 'btn-info' : 'btn-transparent'}`} 
         onClick={() => turnOnOption('copy')}
           data-toggle="tooltip" data-placement="button" title="Copy fragment tool">
           <i className='bi text-dark bi-copy' />
-        </button>
+        </button> */}
         <button type="button" 
         className={`btn py-0 px-1 ${isCutFragOption ? 'btn-secondary' : 'btn-transparent'}`} 
         onClick={() => turnOnOption('cut')}
@@ -59,14 +59,44 @@ function ToolsBar() {
         <button type="button" 
         className={`btn py-0 px-1 ${isVolAutoOption ? 'btn-success' : 'btn-transparent'}`} 
         onClick={() => turnOnOption('volume')}
-          data-toggle="tooltip" data-placement="button" title="Volume Automation tool">
-          <i className='bi text-dark bi-bezier2' />
+          data-toggle="tooltip" data-placement="button" title="Mute Fragment Volume tool">
+          <i className='bi text-dark bi-option' />
         </button>
         <button type="button" 
         className={`btn py-0 px-1 ${isTrashOption ? 'btn-danger' : 'btn-transparent'}`} 
         onClick={() => turnOnOption('trash')}
           data-toggle="tooltip" data-placement="button" title="Delete track">
           <i className='bi text-dark bi-trash3-fill' />
+        </button>
+        <button type="button" 
+        className={`btn py-0 px-1 ${isTrashOption ? 'bg-primary' : 'btn-transparent'}`} 
+        onClick={() => turnOnOption('trash')}
+          data-toggle="tooltip" data-placement="button" title="Change Pitch track">
+          <i className='bi text-dark bi-activity' />
+        </button>
+        <button type="button" 
+        className={`btn py-0 px-1 ${isTrashOption ? 'bg-white' : 'btn-transparent'}`} 
+        onClick={() => turnOnOption('trash')}
+          data-toggle="tooltip" data-placement="button" title="Change Volume track">
+          <i className='bi text-dark bi-sliders2-vertical' />
+        </button>
+        <button type="button" 
+        className={`btn py-0 px-1 ${isTrashOption ? 'btn-info' : 'btn-transparent'}`} 
+        onClick={() => turnOnOption('trash')}
+          data-toggle="tooltip" data-placement="button" title="Change Speed track">
+          <i className='bi text-dark bi-cassette-fill' />
+        </button>
+        <button type="button" 
+        className={`btn py-0 px-1 ${isTrashOption ? 'btn-warning' : 'btn-transparent'}`} 
+        onClick={() => turnOnOption('trash')}
+          data-toggle="tooltip" data-placement="button" title="Change Panning track">
+          <i className='bi text-dark bi-arrows-expand-vertical' />
+        </button>
+        <button type="button" 
+        className={`btn py-0 px-1 ${isTrashOption ? 'bg-secondary' : 'btn-transparent'}`} 
+        onClick={() => turnOnOption('trash')}
+          data-toggle="tooltip" data-placement="button" title="Change Panning track">
+          <i className='bi text-dark bi-textarea-t' />
         </button>
         </Nav>
         <div className='d-flex justify-content-center'>

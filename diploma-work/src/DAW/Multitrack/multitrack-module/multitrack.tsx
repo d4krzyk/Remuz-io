@@ -15,6 +15,7 @@ import { makeDraggable } from 'wavesurfer.js/dist/draggable.js'
 import WebAudioPlayer from './webaudio'
 import getPlaceholderURL from './placeholderURL.jsx'
 import { ToolsStore } from '../ToolsStore';
+import toWav from 'audiobuffer-to-wav';
 export type TrackId = string | number
 
 type SingleTrackOptions = Omit<
@@ -570,49 +571,79 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
   }
 
   public RemoveSegment(id: number, startSec: number, endSec: number) {
-    const audioPlayer = this.audios[id];
+    let audioPlayer = this.audios[id];
+    const hueWave = this.tracks[id].options?.waveColor;
+    const hueProgress = this.tracks[id].options?.progressColor;
     if (audioPlayer instanceof WebAudioPlayer) {
       // Tutaj wiemy, że audioPlayer jest instancją WebAudioPlayer
       console.log("Operacja git.");
       //audioPlayer.removeSegment(startSec, endSec);
     } else {
-      const audioCtx = new AudioContext();
+      //const audioCtx = new AudioContext();
 
       // Utwórz MediaElementAudioSourceNode z HTMLAudioElement
-      const source = audioCtx.createMediaElementSource(audioPlayer);
-
+      const source = this.audioContext.createMediaElementSource(audioPlayer);
+      audioPlayer.src = this.audios[id].src;
+      console.log("Źródło audio: ", audioPlayer.src);
       // Utwórz nową instancję WebAudioPlayer z AudioContext
-      const webAudioPlayer = new WebAudioPlayer(audioCtx);
+      const webAudioPlayer = new WebAudioPlayer(this.audioContext);
+      
+      fetch(audioPlayer.src)
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => this.audioContext.decodeAudioData(arrayBuffer))
+        .then(audioBuffer => {
+          webAudioPlayer.Buffer = audioBuffer;
+          webAudioPlayer.src = audioPlayer.src;
+          console.log("webaudio załadowane:", webAudioPlayer.src, webAudioPlayer.Buffer);
       if (webAudioPlayer instanceof WebAudioPlayer)
         {
-          console.log("Operacja git.");
+       //console.log("czekam", webAudioPlayer.Buffer);
+        //console.log("Operacja git.", webAudioPlayer);
+        console.log("przed usunieciem start i stop", startSec, endSec);
         webAudioPlayer.removeSegment(startSec, endSec);
-        console.log("wykonano")
-        /*this.addTrack({
+        const wav = toWav(webAudioPlayer.Buffer); // Konwertuj AudioBuffer na arrayBuffer formatu WAV
+        const blob = new Blob([wav], {type: 'audio/wav'}); // Stwórz Blob z danych WAV
+        const urlNewAudio = URL.createObjectURL(blob);
+
+        console.log("buforWebaudio", webAudioPlayer.Buffer);
+        
+        this.audios[id].src = urlNewAudio;
+        let newStart = startSec;
+        let newEnd = endSec;
+        if(startSec < 0 || endSec < 5) {
+          newStart = 0;
+          newEnd = webAudioPlayer.Buffer.duration;
+        }
+        if(startSec > webAudioPlayer.Buffer.duration - 1 || endSec > webAudioPlayer.Buffer.duration - 1) {
+          newStart = 0;
+          newEnd = 2 || webAudioPlayer.Buffer.duration;
+        }
+        this.addTrack({
           id: this.tracks[id].id,
-          url: this.tracks[id].url,
+          url:  this.audios[id].src,
           startPosition: this.tracks[id].startPosition,
           draggable: false,
           options: {
-            waveColor: this.tracks[id].options.waveColor,
-            progressColor: this.tracks[id].options.progressColor,
+            waveColor: `${hueWave}`,
+            progressColor: `${hueProgress}`,
           },
           intro: {
             label: this.tracks[id]?.intro?.label || '',
             endTime: 0,
           },
           markers: [{
-            time: this.tracks[id]?.markers?.time,
+            time: newStart || 0 ,
             label: 'X Region X',
             color: 'hsla(345, 50%, 30%, 0.7)',
-            end: this.tracks[id]?.markers?.end,
+            end: newEnd || 2 ,
           }]
-        })*/
+        })
       }
       else {
         // audioPlayer jest HTMLAudioElement, obsłuż inaczej
         console.log("Operacja nieobsługiwana dla HTMLAudioElement.");
       }
+    });
     }
   }
 
@@ -649,13 +680,9 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
   public addTrack(track: TrackOptions) {
     console.log("id:", this.tracks.findIndex((t) => t.id === track.id ) )
     const index = this.tracks.findIndex((t) => t.id === track.id)
-    console.log("inde:", index )
     if (index !== -1) {
-      console.log("before init track")
       this.tracks[index] = track
-        console.log("before init audio")
       this.initAudio(track).then((audio) => {
-        console.log("under init audio")
         this.audios[index] = audio
         this.durations[index] = audio.duration
         this.initDurations(this.durations)
@@ -676,7 +703,6 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         this.setTime(0);
         this.emit('canplay')
       })
-      console.log("after init audio")
     }
   }
   public removeTrack(trackId: string) {
@@ -691,13 +717,9 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         //options: { height: 0 },
       }
       const index = this.tracks.findIndex((t) => t.id === trackAdd.id)
-      console.log("inde:", index )
     if (index !== -1) {
-        console.log("before init track")
         this.tracks[index] = trackAdd
-        console.log("before init audio")
         this.initAudio(PLACEHOLDER_TRACK).then((audio) => {
-        console.log("under init audio")
         this.audios[index] = audio
         this.durations[index] = audio.duration
         this.initDurations(this.durations)
