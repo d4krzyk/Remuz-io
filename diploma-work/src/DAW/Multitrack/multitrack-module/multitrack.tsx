@@ -527,12 +527,14 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
     if (this.audioContext && this.audioContext.state === 'suspended') {
       this.audioContext.resume()
     }
-  
+    
     this.startSync()
-  
+    
     const indexes = this.findCurrentTracks()
     indexes.forEach((index) => {
     if (this.audios[index]) {
+      
+
       const playPromise = this.audios[index].play();
       if (playPromise !== undefined) {
         playPromise.then(_ => {
@@ -566,6 +568,54 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
     });
     this.updatePosition(0,false)
   }
+
+  public RemoveSegment(id: number, startSec: number, endSec: number) {
+    const audioPlayer = this.audios[id];
+    if (audioPlayer instanceof WebAudioPlayer) {
+      // Tutaj wiemy, że audioPlayer jest instancją WebAudioPlayer
+      console.log("Operacja git.");
+      //audioPlayer.removeSegment(startSec, endSec);
+    } else {
+      const audioCtx = new AudioContext();
+
+      // Utwórz MediaElementAudioSourceNode z HTMLAudioElement
+      const source = audioCtx.createMediaElementSource(audioPlayer);
+
+      // Utwórz nową instancję WebAudioPlayer z AudioContext
+      const webAudioPlayer = new WebAudioPlayer(audioCtx);
+      if (webAudioPlayer instanceof WebAudioPlayer)
+        {
+          console.log("Operacja git.");
+        webAudioPlayer.removeSegment(startSec, endSec);
+        console.log("wykonano")
+        /*this.addTrack({
+          id: this.tracks[id].id,
+          url: this.tracks[id].url,
+          startPosition: this.tracks[id].startPosition,
+          draggable: false,
+          options: {
+            waveColor: this.tracks[id].options.waveColor,
+            progressColor: this.tracks[id].options.progressColor,
+          },
+          intro: {
+            label: this.tracks[id]?.intro?.label || '',
+            endTime: 0,
+          },
+          markers: [{
+            time: this.tracks[id]?.markers?.time,
+            label: 'X Region X',
+            color: 'hsla(345, 50%, 30%, 0.7)',
+            end: this.tracks[id]?.markers?.end,
+          }]
+        })*/
+      }
+      else {
+        // audioPlayer jest HTMLAudioElement, obsłuż inaczej
+        console.log("Operacja nieobsługiwana dla HTMLAudioElement.");
+      }
+    }
+  }
+
 
   public isPlaying() {
     return this.audios.some((audio) => !audio.paused)

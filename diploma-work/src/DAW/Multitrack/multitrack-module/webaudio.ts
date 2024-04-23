@@ -174,6 +174,35 @@ class WebAudioPlayer {
       this.gainNode.connect(this.audioContext.destination)
     }
   }
+
+
+  async removeSegment(startSec: number, endSec: number) {
+    if (!this.buffer) return;
+
+    const startOffset = startSec * this.buffer.sampleRate;
+    const endOffset = endSec * this.buffer.sampleRate;
+    const newLength = this.buffer.length - (endOffset - startOffset);
+
+    const newBuffer = this.audioContext.createBuffer(
+      this.buffer.numberOfChannels,
+      newLength,
+      this.buffer.sampleRate
+    );
+
+    for (let channel = 0; channel < this.buffer.numberOfChannels; channel++) {
+      const oldData = this.buffer.getChannelData(channel);
+      const newData = newBuffer.getChannelData(channel);
+      newData.set(oldData.subarray(0, startOffset), 0);
+      newData.set(oldData.subarray(endOffset), startOffset);
+    }
+
+    this.buffer = newBuffer;
+    this._duration = this.buffer.duration;
+
+    //this.emitEvent('modified');
+  }
+
+
 }
 
 export default WebAudioPlayer

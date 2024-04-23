@@ -10,8 +10,8 @@ import VolumeMeterStore from '../VolumeMeterStore.jsx';
 
 const MultiTrackPlayer = () => {
   const [showTrashModal, setShowTrashModal] = useState(false);
-
-
+  const [showDelFragModal, setShowDelFragModal] = useState(false);
+  const handleDelFragShow = () => setShowDelFragModal(true);
 
   const handleTrashCloseNo = () => { setShowTrashModal(false); };
   const handleTrashShow = () => setShowTrashModal(true);
@@ -20,10 +20,39 @@ const MultiTrackPlayer = () => {
     multitrackInstance.removeTrack(selectedTrackId);
     setTimeMultiTrack(0);
     multitrackInstance.stop();
-    initRef.current = false;
+    //initRef.current = false;
   };
 
-
+  const handleDelFragConfirm = () => {
+    setShowDelFragModal(false);
+    setIsDeleteConfirmed(false);
+    multitrackInstance.addTrack({
+      id: multitrackInstance.tracks[selectedTrackId].id,
+      url: multitrackInstance.tracks[selectedTrackId].url,
+      startPosition: selectedTrackPosition,
+      draggable: false,
+      options: {
+        waveColor: multitrackInstance.tracks[selectedTrackId].options.waveColor,
+        progressColor: multitrackInstance.tracks[selectedTrackId].options.progressColor,
+      },
+      intro: {
+        label: multitrackInstance.tracks[selectedTrackId]?.intro?.label || '',
+        endTime: 0,
+      },
+      markers: [{
+        time: multitrackInstance.tracks[selectedTrackId]?.markers?.time || layerMarkerStart[selectedTrackId] || 0,
+        label: 'X Region X',
+        color: 'hsla(345, 50%, 30%, 0.7)',
+        end: multitrackInstance.tracks[selectedTrackId]?.markers?.end || layerMarkerEnd[selectedTrackId] || 2
+      }]
+    });
+    setTimeMultiTrack(0);
+    multitrackInstance.stop();
+    multitrackInstance.RemoveSegment(multitrackInstance.tracks[selectedTrackId].id, 
+      multitrackInstance.tracks[selectedTrackId]?.markers?.time, multitrackInstance.tracks[selectedTrackId]?.markers?.end);
+    
+    //initRef.current = false;
+  };
   
 
   
@@ -43,23 +72,18 @@ const MultiTrackPlayer = () => {
   const [multitrackInstance, setMultitrackInstance] = useState(null); // przechowujemy instancję multitrack
   const isTrashOption = ToolsStore(state => state.isTrashOption);
   const isDelFragOption = ToolsStore(state => state.isDelFragOption);
-  const [layerAudioSrc, setLayerAudioSrc] = useState({});
-  const [layerDurations, setLayerDurations] = useState({});
-  const [layerName, setLayerName] = useState({});
+
   const [layerEnvelope, setLayerEnvelope] = useState({});
+  const [layerMarkerStart, setLayerMarkerStart] = useState({});
+  const [layerMarkerEnd, setLayerMarkerEnd] = useState({});
+  const [isDeleteConfirmed, setIsDeleteConfirmed] = useState(false);
+
   //console.log(isTrashOption);
   // Funkcja, która zostanie wywołana po kliknięciu na track
 
-  function handleTrackClick(id, multitrack) {
-    //console.log(TimeMultiTrack);
-    console.log('Kliknięto na track o id: ' + id);
-    setSelectedTrackId(id);
-    if (isTrashOption) {
-      handleTrashShow();
-    }
-    
 
-  }
+
+  
   //console.log('Opcja usuniecia main: ' + trashOption);
   const [, drop] = useDrop(() => ({
     accept: 'sound',
@@ -176,9 +200,14 @@ const MultiTrackPlayer = () => {
       console.log(`Track ${id} intro end updated to ${endTime}`)
     })
 
-    multitrackInstance.on('marker-change', ({ id, startTime, endTime }) => {
-      console.log(`Track ${id} marker start and end updated to ${startTime} ${endTime}`)
+    multitrackInstance.on('marker-change', ({ id, startMarker, endMarker }) => {
+      const newLayerMarkerStart = { ...layerMarkerStart, [id]: startMarker };
+      setLayerMarkerStart(newLayerMarkerStart);
+      const newLayerMarkerEnd = { ...layerMarkerEnd, [id]: endMarker };
+      setLayerMarkerEnd(newLayerMarkerEnd);
+      console.log(`Track ${id} marker start and end updated to ${layerMarkerStart[id]} ${layerMarkerEnd[id]}`)
     })
+    
     multitrackInstance.on('envelope-points-change', ({ id, points }) => {
       multitrackInstance.tracks[id].envelope = points;
       console.log(`Track ${id} envelope points updated to`, points)
@@ -260,7 +289,7 @@ const MultiTrackPlayer = () => {
     console.log('Multitrack instance created', multitrackInstance);
     }
 
-  }, [ multitrackInstance, CurrentLayer, setTimeMultiTrack]);
+  }, [ multitrackInstance, CurrentLayer, setTimeMultiTrack, layerMarkerStart, layerMarkerEnd, layerEnvelope]);
 
 
   useEffect(() => {
@@ -271,25 +300,38 @@ const MultiTrackPlayer = () => {
 
     function selectIndex(event) {
       // Wywołaj funkcję z id klikniętego tracka
+      
       const id = event.currentTarget.getAttribute('track-id');
+      console.log('Kliknięto na track o id: ' + id);
+      setSelectedTrackId(id);
       if (isDelFragOption) {
-        handleDelFragOption();
+        handleDelFragOption(event);
       }
-      handleTrackClick(id, multitrackInstance);
-
+      if (isTrashOption) {
+        handleTrashShow();
+      }
     }
-
+    function confirmDelFrag(event) {
+      event.preventDefault()
+      if (isDelFragOption) {
+        handleDelFragShow();
+      }
+      
+    }
     tracks.forEach((track) => {
       track.addEventListener('click', selectIndex);
+      track.addEventListener('contextmenu', confirmDelFrag);
     });
     return () => {
       tracks.forEach((track) => {
         track.removeEventListener('click', selectIndex);
+        track.removeEventListener('contextmenu', confirmDelFrag);
       });
     }
 
     function handleDelFragOption() {
-      console.log('Usunięto fragment');
+      console.log('Wybieram fragment do usuniecia');
+      
       //console.log(selectedTrackId, layerAudioSrc[selectedTrackId], selectedTrackPosition, layerName[selectedTrackId]);
       multitrackInstance.stop();
       if (multitrackInstance.tracks[selectedTrackId]?.startPosition)
@@ -313,15 +355,19 @@ const MultiTrackPlayer = () => {
               label: multitrackInstance.tracks[selectedTrackId]?.intro?.label || '',
               endTime: 0,
             },
-            //startCue: multitrackInstance.tracks[selectedTrackId]?.startCue || 1,
-            //endCue: multitrackInstance.tracks[selectedTrackId]?.endCue || 2,
             markers: [{
-              time: multitrackInstance.tracks[selectedTrackId]?.markers?.time || multitrackInstance?.currentTime || 0,
+              time: multitrackInstance.tracks[selectedTrackId]?.markers?.time || layerMarkerStart[selectedTrackId] || 0,
               label: 'X Region X',
               color: 'hsla(345, 50%, 30%, 0.7)',
-              end: multitrackInstance.tracks[selectedTrackId]?.markers?.end || multitrackInstance?.currentTime + 2 || 2
+              end: multitrackInstance.tracks[selectedTrackId]?.markers?.end || layerMarkerEnd[selectedTrackId] || 2
             }]
           })
+          // if(isDeleteConfirmed)
+          // {
+          //   console.log('Usunięto fragment');
+            
+          // }
+
           //console.log("volume automation: ",newLayerEnvelope[selectedTrackId]);
         };
       }
@@ -330,7 +376,7 @@ const MultiTrackPlayer = () => {
 
 
 
-  }, [ isTrashOption,isDelFragOption, selectedTrackId, multitrackInstance, layerEnvelope, setLayerEnvelope]);
+  }, [ isTrashOption,isDelFragOption, selectedTrackId, multitrackInstance, layerEnvelope, setLayerEnvelope, layerMarkerStart, layerMarkerEnd, isDeleteConfirmed]);
 
 
 
@@ -356,6 +402,22 @@ const MultiTrackPlayer = () => {
         </Modal.Footer>
       </Modal>
 
+      <Modal show={showDelFragModal} onHide={() => setShowDelFragModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Usuwanie Fragmentu Ścieżki Audio</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Czy na pewno chcesz usunąć ten fragment ścieżki audio?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDelFragModal(false)}>
+            Anuluj
+          </Button>
+          <Button variant="danger" onClick={ () => {setIsDeleteConfirmed(true); handleDelFragConfirm()}}>
+            Usuń
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 };
