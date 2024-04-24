@@ -12,10 +12,9 @@ function ToolsBar() {
     
     const {
       isSelectOption,
-      isCopyFragOption,
       isCutFragOption,
       isDelFragOption,
-      isVolAutoOption,
+      isMuteFragOption,
       isTrashOption,
       turnOnOption
     } = ToolsStore();
@@ -57,8 +56,8 @@ function ToolsBar() {
           <i className='bi text-dark bi-x-octagon' />
         </button>
         <button type="button" 
-        className={`btn py-0 px-1 ${isVolAutoOption ? 'btn-success' : 'btn-transparent'}`} 
-        onClick={() => turnOnOption('volume')}
+        className={`btn py-0 px-1 ${isMuteFragOption ? 'btn-success' : 'btn-transparent'}`} 
+        onClick={() => turnOnOption('mute')}
           data-toggle="tooltip" data-placement="button" title="Mute Fragment Volume tool">
           <i className='bi text-dark bi-option' />
         </button>

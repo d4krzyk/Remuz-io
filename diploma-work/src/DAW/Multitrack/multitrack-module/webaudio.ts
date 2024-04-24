@@ -182,9 +182,6 @@ class WebAudioPlayer {
         console.log("No buffer to remove segment from");
         return;
       }
-      else{
-        console.log("Buffer exists");
-      }
       if (typeof startSec !== 'number' || typeof endSec !== 'number') {
         console.error("Start and end position is NaN", startSec, endSec)
         return;
@@ -193,7 +190,7 @@ class WebAudioPlayer {
       const endOffset = Math.round(endSec * this.buffer.sampleRate);
       const newLength = Math.max(Math.round(this.buffer.length - (endOffset - startOffset)), 1);
 
-    console.log("startOffset: ", startOffset, "endOffset: ", endOffset, "newLength: ", newLength);
+    //console.log("startOffset: ", startOffset, "endOffset: ", endOffset, "newLength: ", newLength);
 
     if(startOffset < 0 || endOffset > this.buffer.length || startOffset >= endOffset || newLength <= 0) {
       console.error('Invalid segment range. The start and end offsets must be within the buffer length and the start offset must be less than the end offset.');
@@ -234,8 +231,6 @@ class WebAudioPlayer {
     if (!this.buffer) {
         console.log("No buffer to process");
         return;
-    } else {
-        console.log("Buffer exists");
     }
 
     if (typeof startSec !== 'number' || typeof endSec !== 'number') {
@@ -259,7 +254,7 @@ class WebAudioPlayer {
         }
     }
 
-    console.log("Segment from " + startSec + "s to " + endSec + "s has been muted.");
+    //console.log("Segment from " + startSec + "s to " + endSec + "s has been muted.");
     //this.emitEvent('modified');
 }
 
