@@ -15,6 +15,7 @@ import { makeDraggable } from 'wavesurfer.js/dist/draggable.js'
 import WebAudioPlayer from './webaudio'
 import getPlaceholderURL from './placeholderURL.jsx'
 import { ToolsStore } from '../ToolsStore';
+import { NavStore } from '../../NavigationStore';
 import toWav from 'audiobuffer-to-wav';
 export type TrackId = string | number
 
@@ -108,7 +109,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
   private subscriptions: Array<() => void> = []
   private audioContext: AudioContext
 
-  
+
 
   static create(tracks: MultitrackTracks, options: MultitrackOptions): MultiTrack {
     return new MultiTrack(tracks, options)
@@ -542,6 +543,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
       const playPromise = this.audios[index].play();
       if (playPromise !== undefined) {
         playPromise.then(_ => {
+
           // Automatic playback started!
           // Show playing UI.
         })
@@ -559,6 +561,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
     this.audios.forEach((audio) => {
       if (!audio.paused) {
         audio.pause()
+
       }
     })
   }
@@ -566,6 +569,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
   public stop() {
     this.audios.forEach((audio) => {
       if (!audio.paused) {
+
         audio.pause();
       }
       audio.currentTime = 0; // Ustawienie czasu audio na początek
@@ -573,7 +577,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
     this.updatePosition(0,false)
   }
   private processAudioPlayer = (player: WebAudioPlayer, src: string, id: number, 
-    startSec: number, endSec: number, option: string) => {
+    startSec: number, endSec: number, speedRatio: number,  option: string) => {
     fetch(src)
       .then(response => response.arrayBuffer())
       .then(arrayBuffer => this.audioContext.decodeAudioData(arrayBuffer))
@@ -585,7 +589,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
 
             if(option === 'cut')
               {
-
+                player.cutSegment(startSec, endSec);
               }
             else if(option === 'delete')
               {
@@ -595,6 +599,18 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
               {
                 player.muteSegment(startSec, endSec);
               }
+            else if(option === 'reverse')
+              {
+                player.reverseSegment(startSec, endSec);
+
+              }
+            else if(option === 'speed')
+                {
+                  console.log("actualSpeed ratio", speedRatio)
+                  player.speedSegment(startSec, endSec, speedRatio);
+
+                }
+
           const wav = toWav(player.Buffer); // Konwertuj AudioBuffer na arrayBuffer formatu WAV
           const blob = new Blob([wav], {type: 'audio/wav'}); // Stwórz Blob z danych WAV
           const urlNewAudio = URL.createObjectURL(blob);
@@ -602,20 +618,21 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
           //console.log("buforWebaudio", webAudioPlayer.Buffer);
           
           this.audios[id] = new Audio(urlNewAudio);
-          let newStart = startSec;
-          let newEnd = endSec;
-          if(startSec < 0 || endSec < 5) {
-            newStart = 0;
-            newEnd = player.Buffer.duration;
-          }
-          if(startSec > player.Buffer.duration - 1 || endSec > player.Buffer.duration - 1) {
-            newStart = 0;
-            newEnd = 2 || player.Buffer.duration;
-          }
+          // let newStart = startSec;
+          // let newEnd = endSec;
+          // if(startSec < 0 || endSec < 5) {
+          //   newStart = 0;
+          //   newEnd = player.Buffer.duration;
+          // }
+          // if(startSec > player.Buffer.duration - 1 || endSec > player.Buffer.duration - 1) {
+          //   newStart = 0;
+          //   newEnd = 2 || player.Buffer.duration;
+          // }
           this.addTrack({
             id: this.tracks[id].id,
             url:  this.audios[id].src,
             startPosition: this.tracks[id].startPosition,
+            volume: this.tracks[id].volume,
             draggable: true,
             envelope: [
               { time: 0.001, volume: 1 },
@@ -640,22 +657,22 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         
       });
   }
-  public EditSegment(id: number, startSec: number, endSec: number, option: string) {
+  public EditSegment(id: number, startSec: number, endSec: number, speedRatio: number, option: string) {
     let audioPlayer = this.audios[id];
 
     this.showLoadingScreen(id.toString());
     if (audioPlayer instanceof WebAudioPlayer) {
 
-      this.processAudioPlayer(audioPlayer, audioPlayer.src, id, startSec, endSec, option);
+      this.processAudioPlayer(audioPlayer, audioPlayer.src, id, startSec, endSec, speedRatio, option);
     } else {
 
       // Utwórz MediaElementAudioSourceNode z HTMLAudioElement
       const source = this.audioContext.createMediaElementSource(audioPlayer);
       audioPlayer.src = this.audios[id].src;
-      console.log("Źródło audio: ", audioPlayer.src);
+      //console.log("Źródło audio: ", audioPlayer.src);
       // Utwórz nową instancję WebAudioPlayer z AudioContext
       const webAudioPlayer = new WebAudioPlayer(this.audioContext);
-      this.processAudioPlayer(webAudioPlayer, audioPlayer.src, id, startSec, endSec, option);
+      this.processAudioPlayer(webAudioPlayer, audioPlayer.src, id, startSec, endSec, speedRatio, option);
       
     }
     this.hideLoadingScreen(id.toString());
@@ -705,16 +722,17 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
   }
 
   public addTrack(track: TrackOptions) {
-    console.log("id:", this.tracks.findIndex((t) => t.id === track.id ) )
+    //console.log("id:", this.tracks.findIndex((t) => t.id === track.id ) )
+
     this.showLoadingScreen(track.id.toString());
     const index = this.tracks.findIndex((t) => t.id === track.id)
     if (index !== -1) {
       this.tracks[index] = track
+      console.log('Adding track', this.tracks[index])
       this.initAudio(track).then((audio) => {
         this.audios[index] = audio
         this.durations[index] = audio.duration
         this.initDurations(this.durations)
-
         const container = this.rendering.containers[index]
         container.innerHTML = ''
         const loading = document.createElement('div')

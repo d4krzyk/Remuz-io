@@ -1,6 +1,7 @@
 /**
  * Web Audio buffer player emulating the behavior of an HTML5 Audio element.
  */
+const { PitchShifter, SimpleFilter, SoundTouch, SoundTouchNode } = require('soundtouchjs');
 class WebAudioPlayer {
   private audioContext: AudioContext
   private gainNode: GainNode
@@ -15,12 +16,16 @@ class WebAudioPlayer {
   private buffer: AudioBuffer | null = null
   public paused = true
   public crossOrigin: string | null = null
+  public isChangeSpeed = false;
+
+
 
   constructor(audioContext = new AudioContext()) {
     this.audioContext = audioContext
 
     this.gainNode = this.audioContext.createGain()
     this.gainNode.connect(this.audioContext.destination)
+
   }
 
   addEventListener(event: string, listener: () => void, options?: { once?: boolean }) {
@@ -89,13 +94,16 @@ class WebAudioPlayer {
   }
 
   async play() {
-    if (!this.paused) return
+    
+    if (!this.paused) return;
     this.paused = false
-
     this.bufferNode?.disconnect()
-    this.bufferNode = this.audioContext.createBufferSource()
-    this.bufferNode.buffer = this.buffer
-    this.bufferNode.connect(this.gainNode)
+    
+    this.bufferNode = this.audioContext.createBufferSource();
+    this.bufferNode.buffer = this.buffer;
+    this.bufferNode.connect(this.gainNode);
+    
+
 
     const offset = this.playedDuration > 0 ? this.playedDuration : 0
     const start =
@@ -109,7 +117,6 @@ class WebAudioPlayer {
   pause() {
     if (this.paused) return
     this.paused = true
-
     this.bufferNode?.stop()
     this.playedDuration += this.audioContext.currentTime - this.playStartTime
     this.emitEvent('pause')
@@ -128,6 +135,7 @@ class WebAudioPlayer {
       this.bufferNode.playbackRate.value = value
     }
   }
+
 
   get currentTime() {
     return this.paused ? this.playedDuration : this.playedDuration + this.audioContext.currentTime - this.playStartTime
@@ -174,7 +182,56 @@ class WebAudioPlayer {
       this.gainNode.connect(this.audioContext.destination)
     }
   }
+  get Buffer(): AudioBuffer | null {
+    return this.buffer;
+  }
+  set Buffer(value: AudioBuffer | null) {
+    if (value === null) {
+      console.error('Value is null');
+      return;
+    }
+  
+    this.buffer = value;
+    this._duration = value.duration;
+  }
+  async cutSegment(startSec: number, endSec: number) {
+    if (!this.buffer) 
+      {
+        console.log("No buffer to remove segment from");
+        return;
+      }
+      if (typeof startSec !== 'number' || typeof endSec !== 'number') {
+        console.error("Start and end position is NaN", startSec, endSec)
+        return;
+      }
+      const startOffset = Math.round(startSec * this.buffer.sampleRate);
+      const endOffset = Math.round(endSec * this.buffer.sampleRate);
+      const segmentLength = Math.round(endOffset - startOffset);
 
+    //console.log("startOffset: ", startOffset, "endOffset: ", endOffset, "newLength: ", newLength);
+
+    if (startOffset < 0 || endOffset > this.buffer.length || startOffset >= endOffset || segmentLength <= 0) {
+      console.error('Invalid segment range. The start and end offsets must be within the buffer length and the start offset must be less than the end offset.');
+      return;
+    }
+  
+    const newBuffer = this.audioContext.createBuffer(
+      this.buffer.numberOfChannels,
+      segmentLength,
+      this.buffer.sampleRate
+    );
+  
+    for (let channel = 0; channel < this.buffer.numberOfChannels; channel++) {
+      const oldData = this.buffer.getChannelData(channel);
+      const newData = newBuffer.getChannelData(channel);
+      newData.set(oldData.subarray(startOffset, endOffset), 0);
+    }
+  
+    this.buffer = newBuffer;
+    this._duration = this.buffer.duration;
+
+    //this.emitEvent('modified');
+  }
 
   async removeSegment(startSec: number, endSec: number) {
     if (!this.buffer) 
@@ -214,18 +271,6 @@ class WebAudioPlayer {
 
     //this.emitEvent('modified');
   }
-  get Buffer(): AudioBuffer | null {
-    return this.buffer;
-  }
-  set Buffer(value: AudioBuffer | null) {
-    if (value === null) {
-      console.error('Value is null');
-      return;
-    }
-  
-    this.buffer = value;
-    this._duration = value.duration;
-  }
 
   async muteSegment(startSec: number, endSec: number) {
     if (!this.buffer) {
@@ -254,13 +299,119 @@ class WebAudioPlayer {
         }
     }
 
+  }
+
+  async reverseSegment(startSec: number, endSec: number) {
+    if (!this.buffer) {
+        console.log("No buffer to process");
+        return;
+    }
+
+    if (typeof startSec !== 'number' || typeof endSec !== 'number') {
+        console.error("Start and end position is NaN", startSec, endSec);
+        return;
+    }
+    let newBuffer = this.audioContext.createBuffer(this.buffer.numberOfChannels, this.buffer.length, this.buffer.sampleRate);
+
+    // Kopiowanie danych z oryginalnego AudioBuffer do nowego
+    for (let channel = 0; channel < this.buffer.numberOfChannels; channel++) {
+      newBuffer.copyToChannel(this.buffer.getChannelData(channel), channel);
+    }
+    const startOffset = Math.round(startSec * this.buffer.sampleRate);
+    const endOffset = Math.round(endSec * this.buffer.sampleRate);
+
+    if (startOffset < 0 || endOffset > this.buffer.length || startOffset >= endOffset) {
+        console.error('Invalid segment range. The start and end offsets must be within the buffer length and the start offset must be less than the end offset.');
+        return;
+    }
+
+    // Odwracanie segmentu w każdym kanale
+    for (let channel = 0; channel < newBuffer.numberOfChannels; channel++) {
+      const channelData = newBuffer.getChannelData(channel);
+      for (let i = startOffset, j = endOffset - 1; i < j; i++, j--) {
+        [channelData[i], channelData[j]] = [channelData[j], channelData[i]];
+      }
+    }
+    this.buffer = newBuffer;
+    this._duration = this.buffer.duration;
     //console.log("Segment from " + startSec + "s to " + endSec + "s has been muted.");
     //this.emitEvent('modified');
+  }
+
+  async speedSegment(startSec: number, endSec: number, speedFactor: number) {
+    if (!this.buffer) {
+        console.log("No buffer to process");
+        return;
+    }
+
+    if (typeof startSec !== 'number' || (endSec !== null && typeof endSec !== 'number') || typeof speedFactor !== 'number') {
+        console.error("Invalid input types", startSec, endSec, speedFactor);
+        return;
+    }
+
+    const startOffset = Math.round(startSec * this.buffer.sampleRate);
+    const endOffset = endSec ? Math.round(endSec * this.buffer.sampleRate) : this.buffer.length;
+
+    if (startOffset < 0 || endOffset > this.buffer.length || startOffset >= endOffset) {
+        console.error('Invalid segment range.');
+        return;
+    }
+
+    let newLength = Math.round((endOffset - startOffset) / speedFactor) + (this.buffer.length - (endOffset - startOffset));
+    let newBuffer = this.audioContext.createBuffer(this.buffer.numberOfChannels, newLength, this.buffer.sampleRate);
+    function cubicInterpolate(y0: number, y1: number, y2: number, y3: number, mu: number) {
+      let a0, a1, a2, a3, mu2;
+  
+      mu2 = mu * mu;
+      a0 = y3 - y2 - y0 + y1;
+      a1 = y0 - y1 - a0;
+      a2 = y2 - y0;
+      a3 = y1;
+  
+      return (a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3);
+    }
+
+    for (let channel = 0; channel < this.buffer.numberOfChannels; channel++) {
+        let newChannelData = newBuffer.getChannelData(channel);
+        let oldChannelData = this.buffer.getChannelData(channel);
+
+        // Kopiowanie danych przed segmentem
+        for (let i = 0; i < startOffset; i++) {
+            newChannelData[i] = oldChannelData[i];
+        }
+
+      // Przekopiowanie i przyspieszenie segmentu
+      for (let i = startOffset, j = 0; i < endOffset; i += speedFactor, j++) {
+        let i0 = Math.floor(i);
+        let i1 = Math.min(Math.ceil(i), endOffset - 1);
+        let i2 = Math.min(i1 + 1, endOffset - 1);
+        let i3 = Math.min(i2 + 1, endOffset - 1);
+        let fraction = i - i0;
+
+        if (i < endOffset && j + startOffset < newLength) {
+          newChannelData[j + startOffset] = cubicInterpolate(
+            oldChannelData[i0],
+            oldChannelData[i1],
+            oldChannelData[i2],
+            oldChannelData[i3],
+            fraction
+          );
+        }
+  }
+
+        // Kopiowanie danych po segmencie
+        for (let i = endOffset, j = startOffset + Math.round((endOffset - startOffset) / speedFactor); i < this.buffer.length && j < newLength; i++, j++) {
+            newChannelData[j] = oldChannelData[i];
+        }
+    }
+
+    this.buffer = newBuffer;
+    this._duration = this.buffer.duration;
+}
+  
+
 }
 
 
-
-
-}
 
 export default WebAudioPlayer

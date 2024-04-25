@@ -1,7 +1,22 @@
 // store.js
 import { create } from 'zustand';
 
-const NavStore = create(set => ({
+type Store = {
+  isPlaying: boolean;
+  setIsPlaying: (value: boolean) => void;
+  TimeMultiTrack: number;
+  timeHour: number;
+  timeMinute: number;
+  timeSecond: number;
+  timeMilisecond: number;
+  setTimeMultiTrack: (value: number) => void;
+  setTimeConverted: (value: number) => void;
+};
+
+
+export const NavStore = create<Store>(set => ({
+  isPlaying: false,
+  setIsPlaying: (value) => set({ isPlaying: value }),
   TimeMultiTrack: 0,
   timeHour: 0,
   timeMinute: 0,

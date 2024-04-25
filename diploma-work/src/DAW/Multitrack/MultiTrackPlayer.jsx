@@ -3,15 +3,28 @@ import Multitrack from './multitrack-module/multitrack.tsx';
 import './multitrack-module/multitrack.css'
 import { ToolsStore } from './ToolsStore.tsx';
 import { useDrop } from 'react-dnd';
-import NavStore from '../NavigationStore.jsx';
-import { Modal, Button } from 'react-bootstrap';
+import NavStore from '../NavigationStore.tsx';
+import { Modal, Button, Form } from 'react-bootstrap';
 import VolumeMeterStore from '../VolumeMeterStore.jsx';
 
 
 const MultiTrackPlayer = () => {
   const [showTrashModal, setShowTrashModal] = useState(false);
-  const TrashButtonRef = useRef();
+  const [showTrackNameModal, setShowTrackNameModal] = useState(false);
+  const [trackName, setTrackName] = useState('');
+  const [SpeedPerc, setSpeedPerc] = useState(100);
+  const [hasTrackBeenSelected, setHasTrackBeenSelected] = useState(false);
+
+
+  const initRef = useRef(false);
   const idTempRef = useRef();
+  const TrashButtonRef = useRef();
+  const setIsPlaying = NavStore(state => state.setIsPlaying);
+  const SaveTextButtonRef = useRef();
+
+  const SpeedPercentageRef = useRef();
+  const AcceptSpeedChangeRef = useRef();
+  const [showSpeedModal, setShowSpeedModal] = useState(false);
   const handleTrashCloseNo = () => { setShowTrashModal(false) };
   const handleTrashShow = () => { setShowTrashModal(true) };
   const handleTrashCloseYes = (id) => {
@@ -21,6 +34,11 @@ const MultiTrackPlayer = () => {
     setTimeMultiTrack(0);
     multitrackInstance.stop();
     //initRef.current = false;
+  };
+
+  const handleSpeedChange = (event) => {
+    setSpeedPerc(event.target.value);
+    SpeedPercentageRef.current = event.target.value;
   };
 
   const handleEditFragConfirm = (id, option) => {
@@ -33,11 +51,21 @@ const MultiTrackPlayer = () => {
     } else if (option === 'mute') {
       colorOption = 'hsla(125, 30%, 20%, 0.7)'
       labelOption = '_ Region _';
+    } else if (option === 'cut') {
+      colorOption = 'hsla(85, 5%, 35%, 0.7)'
+      labelOption = '< Region >';
+    } else if (option === 'reverse') {
+      colorOption = 'hsla(45, 45%, 35%, 0.7)'
+      labelOption = '< Reverse <';
+    } else if (option === 'speed') {
+      colorOption = 'hsla(105, 5%, 65%, 0.7)'
+      labelOption = '>> Speed >>';
     }
     if (multitrackInstance.tracks[id]?.url) {
       multitrackInstance.addTrack({
         id: multitrackInstance.tracks[id].id,
         url: multitrackInstance.tracks[id].url,
+        volume: multitrackInstance.tracks[id].volume,
         startPosition: multitrackInstance.tracks[id].startPosition,
         draggable: false,
         options: {
@@ -58,41 +86,123 @@ const MultiTrackPlayer = () => {
       setTimeMultiTrack(0);
       multitrackInstance.stop();
 
-      if (option === 'mute') {
-        multitrackInstance.EditSegment(multitrackInstance.tracks[id].id,
-          layerMarkerStart[id], layerMarkerEnd[id], 'mute');
+
+      
+      try {
+        if(option === 'speed'){
+
+          const speedFactor = SpeedPercentageRef.current / 100;
+          console.log(speedFactor)
+          multitrackInstance.EditSegment(multitrackInstance.tracks[id].id,layerMarkerStart[id], layerMarkerEnd[id], speedFactor, option);
+
+
+        }else{
+          multitrackInstance.EditSegment(multitrackInstance.tracks[id].id,
+            layerMarkerStart[id], layerMarkerEnd[id], 1, option);
+        }
+        
+      } catch (error) {
+        console.error('Error editing segment:', error);
       }
-      else if (option === 'delete') {
-        multitrackInstance.EditSegment(multitrackInstance.tracks[id].id,
-          layerMarkerStart[id], layerMarkerEnd[id], 'delete');
-      }
+      
     }
     multitrackInstance.hideLoadingScreen(multitrackInstance.tracks[id].id.toString());
 
   };
   
 
-  
-  const initRef = useRef(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const {TimeMultiTrack, setTimeMultiTrack } = NavStore();
-  const DeleteMarkerParams = {
-    time: 0,
-    label: 'Region',
-    color: 'hsla(345, 50%, 30%, 0.7)',
+  const handleChangeTextTrack = (id) => {
+
+    trackNameRef.current = multitrackInstance.tracks[id].intro.label;
+    setTrackName(multitrackInstance.tracks[id].intro.label);
+    //setTrackName(currentTrackName);
+    setShowTrackNameModal(true);
   }
+  const handleTrackNameChange = (event) => {
+    setTrackName(event.target.value);
+    trackNameRef.current = event.target.value;
+
+    //setTrackName(event.target.value);
+  };
+  const handleTrackNameSubmit = (id) => {
+    // Aktualizuj nazwę tracka
+    const name = trackNameRef.current.toString();
+    console.log(multitrackInstance.audios[id].duration)
+    console.log(name)
+    multitrackInstance.addTrack({
+      id: multitrackInstance.tracks[id].id,
+      url: multitrackInstance.tracks[id].url,
+      draggable: true,
+      volume: multitrackInstance.tracks[id].volume,
+      startPosition: multitrackInstance.tracks[id].startPosition,
+      options: {
+        waveColor: multitrackInstance.tracks[id].options.waveColor,
+        progressColor: multitrackInstance.tracks[id].options.progressColor,
+      },
+      intro: {
+        label: name || '',
+        endTime: 0,
+      },
+      envelope: multitrackInstance.tracks[id].envelope,
+    });
+    setTimeMultiTrack(0);
+    
+    multitrackInstance.stop();
+    setIsPlaying(multitrackInstance.isPlaying());
+
+    setShowTrackNameModal(false);
+  };
+
+
+
+  const handleTrackSelect = (id) => {
+    // Aktualizuj nazwę tracka
+    if (!hasTrackBeenSelected) {
+      console.log(hasTrackBeenSelected)
+    multitrackInstance.addTrack({
+      id: multitrackInstance.tracks[id].id,
+      url: multitrackInstance.tracks[id].url,
+      draggable: true,
+      volume: multitrackInstance.tracks[id].volume,
+      startPosition: multitrackInstance.tracks[id].startPosition,
+      options: {
+        waveColor: multitrackInstance.tracks[id].options.waveColor,
+        progressColor: multitrackInstance.tracks[id].options.progressColor,
+      },
+      intro: {
+        label: multitrackInstance.tracks[id].intro.label || '',
+        endTime: 0,
+      },
+      envelope: multitrackInstance.tracks[id].envelope || [
+        { time: 0, volume: 1 },
+        { time: multitrackInstance.audios[id].duration - 0.001, volume: 1 },
+      ],
+    });
+    setTimeMultiTrack(0);
+    //multitrackInstance.stop();
+    setIsPlaying(multitrackInstance.isPlaying());
+    setHasTrackBeenSelected(true);
+    }
+  };
   
+
+  const {TimeMultiTrack, setTimeMultiTrack } = NavStore();
+
   //const [layerAudio, setLayerAudio] = useState([]);
   const [CurrentLayerID, setCurrentLayerID] = useState([]);
   const [multitrackInstance, setMultitrackInstance] = useState(null); // przechowujemy instancję multitrack
   const isTrashOption = ToolsStore(state => state.isTrashOption);
   const isDelFragOption = ToolsStore(state => state.isDelFragOption);
   const isMuteFragOption = ToolsStore(state => state.isMuteFragOption);
+  const isCutFragOption = ToolsStore(state => state.isCutFragOption);
+  const isReverseOption = ToolsStore(state => state.isReverseOption);
+  const isSpeedOption = ToolsStore(state => state.isSpeedOption);
+  const isTextFormatOption = ToolsStore(state => state.isTextFormatOption);
+  const isSelectOption = ToolsStore(state => state.isSelectOption);
   const [layerEnvelope, setLayerEnvelope] = useState({});
   const [layerMarkerStart, setLayerMarkerStart] = useState({});
   const [layerMarkerEnd, setLayerMarkerEnd] = useState({});
-
-
+  const trackNameRef = useRef('');
   //console.log(isTrashOption);
   // Funkcja, która zostanie wywołana po kliknięciu na track
 
@@ -118,6 +228,7 @@ const MultiTrackPlayer = () => {
           id: CurrentLayerID,
           url: item.src,
           startPosition: 0,
+          volume: 1,
           draggable: true,
           options: {
             waveColor: `hsl(${hue}, 47%, 69%)`,
@@ -133,13 +244,15 @@ const MultiTrackPlayer = () => {
           //markers: [DeleteMarkerParams]
         });
         multitrackInstance.hideLoadingScreen(CurrentLayerID.toString());
+        setIsPlaying(multitrackInstance.isPlaying());
+        setHasTrackBeenSelected(true);
 
       }
     },
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
     }),
-  }), [multitrackInstance, CurrentLayerID]);
+  }), [multitrackInstance, CurrentLayerID, hasTrackBeenSelected]);
 
 
 
@@ -187,31 +300,31 @@ const MultiTrackPlayer = () => {
 
     // Events
     multitrackInstance.on('start-position-change', ({ id, startPosition }) => {
-      console.log(`Track ${id} start position updated to ${startPosition}`)
+      //console.log(`Track ${id} start position updated to ${startPosition}`)
     })
 
     multitrackInstance.on('start-cue-change', ({ id, startCue }) => {
-      console.log(`Track ${id} start cue updated to ${startCue}`)
+      //console.log(`Track ${id} start cue updated to ${startCue}`)
     })
 
     multitrackInstance.on('end-cue-change', ({ id, endCue }) => {
-      console.log(`Track ${id} end cue updated to ${endCue}`)
+      //console.log(`Track ${id} end cue updated to ${endCue}`)
     })
 
     multitrackInstance.on('volume-change', ({ id, volume }) => {
-      console.log(`Track ${id} volume updated to ${volume}`)
+      //console.log(`Track ${id} volume updated to ${volume}`)
     })
 
     multitrackInstance.on('fade-in-change', ({ id, fadeInEnd }) => {
-      console.log(`Track ${id} fade-in updated to ${fadeInEnd}`)
+      //console.log(`Track ${id} fade-in updated to ${fadeInEnd}`)
     })
 
     multitrackInstance.on('fade-out-change', ({ id, fadeOutStart }) => {
-      console.log(`Track ${id} fade-out updated to ${fadeOutStart}`)
+      //console.log(`Track ${id} fade-out updated to ${fadeOutStart}`)
     })
 
     multitrackInstance.on('intro-end-change', ({ id, endTime }) => {
-      console.log(`Track ${id} intro end updated to ${endTime}`)
+      //console.log(`Track ${id} intro end updated to ${endTime}`)
     })
 
     multitrackInstance.on('marker-change', ({ id, startMarker, endMarker }) => {
@@ -219,12 +332,12 @@ const MultiTrackPlayer = () => {
       setLayerMarkerStart(newLayerMarkerStart);
       const newLayerMarkerEnd = { ...layerMarkerEnd, [id]: endMarker };
       setLayerMarkerEnd(newLayerMarkerEnd);
-      console.log(`Track ${id} marker start and end updated to ${layerMarkerStart[id]} ${layerMarkerEnd[id]}`)
+      //console.log(`Track ${id} marker start and end updated to ${layerMarkerStart[id]} ${layerMarkerEnd[id]}`)
     })
     
     multitrackInstance.on('envelope-points-change', ({ id, points }) => {
       multitrackInstance.tracks[id].envelope = points;
-      console.log(`Track ${id} envelope points updated to`, points)
+      //console.log(`Track ${id} envelope points updated to`, points)
     })
     //setMultitrackInstance(multitrack); // zapisujemy instancję multitrack w stanie
 
@@ -232,6 +345,8 @@ const MultiTrackPlayer = () => {
       setTimeMultiTrack(multitrackInstance.currentTime);
     }, 10);
 
+
+    setIsPlaying(multitrackInstance.isPlaying());
     multitrackInstance.on('drop', async ({ id }) => {
 
       setCurrentLayerID(id);
@@ -248,10 +363,13 @@ const MultiTrackPlayer = () => {
     multitrackInstance.once('canplay', () => {
       button_start_pause.onclick = async () => {
         if (multitrackInstance.isPlaying()) {
+          setIsPlaying(false);
           multitrackInstance.pause();
         } else {
           try {
             await multitrackInstance.play();
+            setIsPlaying(true);
+
           } catch (error) {
             console.error("Error playing audio: ", error);
           }
@@ -264,7 +382,9 @@ const MultiTrackPlayer = () => {
 
     multitrackInstance.once('canplay', () => {
       button_stop.onclick = () => {
+
         multitrackInstance.stop();
+        setIsPlaying(false);
       }
     })
 
@@ -300,7 +420,7 @@ const MultiTrackPlayer = () => {
       console.log('Set sinkId to default')
     })
 
-    console.log('Multitrack instance created', multitrackInstance);
+    //console.log('Multitrack instance created', multitrackInstance);
     }
 
   }, [ multitrackInstance, CurrentLayerID, setTimeMultiTrack, layerMarkerStart, layerMarkerEnd, layerEnvelope]);
@@ -308,6 +428,7 @@ const MultiTrackPlayer = () => {
 
   useEffect(() => {
 
+    
     //console.log('Zmiana stanu w multitracku: ' + multitrackInstance);
     // Pobierz wszystkie elementy ścieżek
     let tracks = document.querySelectorAll('.track');
@@ -317,19 +438,56 @@ const MultiTrackPlayer = () => {
         handleTrashCloseYes(idTempRef.current);
       };
     }
+    if (SaveTextButtonRef.current) {
+      SaveTextButtonRef.current.onclick = () => {
+        console.log('Kliknięto na przycisk zmiany tekstu')
+        handleTrackNameSubmit(idTempRef.current);
+      };
+    }
+    if (AcceptSpeedChangeRef.current) {
+      AcceptSpeedChangeRef.current.onclick = () => {
+        setShowSpeedModal(false)
+        console.log('Kliknięto na przycisk zmiany czasu')
+        handleEditFragConfirm(idTempRef.current, 'speed');
+      };
+    }
     function selectIndex(event) {
 
       const id = event.currentTarget.getAttribute('track-id');
       console.log('Kliknięto na track o id: ' + id);
       idTempRef.current = id;
-      if (isDelFragOption) {
-        handleEditFragOption(id, 'delete');
-      }
-      if (isMuteFragOption) {
-        handleEditFragOption(id, 'mute');
-      }
-      if (isTrashOption) {
-        handleTrashShow();
+      if (multitrackInstance.tracks[id]?.url) {
+        if (isSelectOption) {
+          handleTrackSelect(id);
+        }
+        if (isCutFragOption) {
+          setHasTrackBeenSelected(false);
+          handleEditFragOption(id, 'cut');
+        }
+        if (isDelFragOption) {
+          setHasTrackBeenSelected(false);
+          handleEditFragOption(id, 'delete');
+        }
+        if (isMuteFragOption) {
+          setHasTrackBeenSelected(false);
+          handleEditFragOption(id, 'mute');
+        }
+        if (isTrashOption) {
+          setHasTrackBeenSelected(false);
+          handleTrashShow();
+        }
+        if (isReverseOption) {
+          setHasTrackBeenSelected(false);
+          handleEditFragOption(id, 'reverse');
+        }
+        if (isSpeedOption) {
+          setHasTrackBeenSelected(false);
+          handleEditFragOption(id, 'speed');
+        }
+        if (isTextFormatOption) {
+          setHasTrackBeenSelected(false);
+          handleChangeTextTrack(id);
+        }
 
       }
     }
@@ -337,13 +495,24 @@ const MultiTrackPlayer = () => {
       const id = event.currentTarget.getAttribute('track-id');
       console.log('Potwierdzenie na track o id: ' + id);
       event.preventDefault()
-      if (isDelFragOption) {
-        handleEditFragConfirm(id, 'delete');
+      if (multitrackInstance.tracks[id]?.url) {
+        if (isDelFragOption) {
+          handleEditFragConfirm(id, 'delete');
+        }
+        if (isMuteFragOption) {
+          handleEditFragConfirm(id, 'mute');
+        }
+        if (isCutFragOption) {
+          handleEditFragConfirm(id, 'cut');
+        }
+        if (isReverseOption) {
+          handleEditFragConfirm(id, 'reverse');
+        }
+        if (isSpeedOption) {
+          setShowSpeedModal(true);
+
+        }
       }
-      if (isMuteFragOption) {
-        handleEditFragConfirm(id, 'mute');
-      }
-      
     }
     tracks.forEach((track) => {
       track.addEventListener('click', selectIndex);
@@ -357,7 +526,7 @@ const MultiTrackPlayer = () => {
     }
 
     function handleEditFragOption(id, option) {
-      console.log('Wybieram fragment do edycji');
+      //console.log('Wybieram fragment do edycji');
       let colorOption = '';
       let labelOption = '';
       if (option === 'delete') {
@@ -366,8 +535,17 @@ const MultiTrackPlayer = () => {
       } else if (option === 'mute') {
         colorOption = 'hsla(125, 30%, 20%, 0.7)'
         labelOption = '_ Region _';
-        console.log("dziala")
+      } else if (option === 'cut') {
+        colorOption = 'hsla(85, 5%, 35%, 0.7)'
+        labelOption = '< Region >';
+      } else if (option === 'reverse') {
+        colorOption = 'hsla(45, 45%, 35%, 0.7)'
+        labelOption = '< Reverse <';
+      } else if (option === 'speed') {
+        colorOption = 'hsla(105, 5%, 65%, 0.7)'
+        labelOption = '>> Speed >>';
       }
+
       multitrackInstance.stop();
       if (multitrackInstance.tracks[id]?.url) {
 
@@ -376,6 +554,7 @@ const MultiTrackPlayer = () => {
         multitrackInstance.addTrack({
           id: multitrackInstance.tracks[id].id,
           url: multitrackInstance.tracks[id].url,
+          volume: multitrackInstance.tracks[id].volume,
           startPosition: multitrackInstance.tracks[id]?.startPosition || 0,
           draggable: false,
           options: {
@@ -401,7 +580,8 @@ const MultiTrackPlayer = () => {
 
 
 
-  }, [ isTrashOption,isDelFragOption, showTrashModal, isMuteFragOption, multitrackInstance, layerEnvelope, setLayerEnvelope, layerMarkerStart, layerMarkerEnd]);
+  }, [ isTrashOption,isDelFragOption, isCutFragOption, showTrashModal, showTrackNameModal, showSpeedModal, isMuteFragOption, 
+    isReverseOption, isSpeedOption, isTextFormatOption, multitrackInstance, hasTrackBeenSelected, layerEnvelope, setLayerEnvelope, layerMarkerStart, layerMarkerEnd]);
 
 
 
@@ -424,6 +604,46 @@ const MultiTrackPlayer = () => {
           </Button>
           <Button ref={TrashButtonRef} variant="primary">
             Tak
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+
+      <Modal show={showTrackNameModal} onHide={() => {setShowTrackNameModal(false)}}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Track Name</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Control type="text" ref={trackNameRef} value={trackName} onChange={handleTrackNameChange} />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => {setShowTrackNameModal(false)}}>
+            Close
+          </Button>
+          <Button ref={SaveTextButtonRef} variant="primary">
+            Save Changes
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showSpeedModal} onHide={() => setShowSpeedModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Speed Value</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group controlId="formBasicRange">
+              <Form.Label>Value: {SpeedPerc}%</Form.Label>
+              <Form.Control type="range" min="50" max="200" ref={SpeedPercentageRef} value={SpeedPerc} onChange={handleSpeedChange} />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowSpeedModal(false)}>
+            Close
+          </Button>
+          <Button variant="primary" ref={AcceptSpeedChangeRef}>
+            Save Changes
           </Button>
         </Modal.Footer>
       </Modal>

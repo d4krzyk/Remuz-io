@@ -3,10 +3,10 @@ import { Navbar, Nav, Modal, Button, FormControl } from 'react-bootstrap';
 import { Link } from "react-router-dom";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { motion } from 'framer-motion';
-import NavStore from './NavigationStore.jsx';
+import NavStore from './NavigationStore.tsx';
 const NavigationBar = () => {
 
-  const [isPlaying, setIsPlaying] = useState(false);
+  const {isPlaying} = NavStore();
   const [modalShow, setModalShow] = useState(false);
   const [modalSaveShow, setModalSaveShow] = useState(false);
   const {setTimeConverted,TimeMultiTrack,timeHour, timeMinute, timeSecond, timeMilisecond} = NavStore();
@@ -16,12 +16,12 @@ const NavigationBar = () => {
   const formattedMilisecond = String(Math.round(timeMilisecond / 10)).padStart(2, '0');
   //console.log(timeSecond)
   const [bpm, setBpm] = useState(140.00);
-  function handlePauseMusic() {
-    setIsPlaying(!isPlaying)
-  }
-  function handleStopMusic() {
-    setIsPlaying(false)
-  }
+  // function handlePauseMusic() {
+  //   setIsPlaying(!isPlaying)
+  // }
+  // function handleStopMusic() {
+  //   setIsPlaying(false)
+  // }
   useEffect(() => { setTimeConverted(TimeMultiTrack) }, [TimeMultiTrack, setTimeConverted]);
 
   const handleBpmChange = (event) => {
@@ -39,11 +39,11 @@ const NavigationBar = () => {
             <div className='d-flex'>
               <div className='column p-2 pe-1 bg-primary' style={{ borderTopRightRadius: '8px', borderBottomRightRadius: '8px', borderTopLeftRadius: '8px', borderBottomLeftRadius: '8px' }}>
                 <span className='text-white mx-1 '>
-                  <motion.div id={'play-music-button'} className=' d-inline-flex' whileTap={{ scale: 0.6 }} onClick={() => handlePauseMusic()}>
+                  <motion.div id={'play-music-button'} className=' d-inline-flex' whileTap={{ scale: 0.6 }} >
                     <i className={`bi ${isPlaying ? "bi-pause-fill" : "bi-play-fill"}`}/>
                   </motion.div></span >
                 <span className='text-white mx-1 '>
-                  <motion.div id={'stop-music-button'} className=' d-inline-flex' whileTap={{ scale: 0.6 }} onClick={() => handleStopMusic()} >
+                  <motion.div id={'stop-music-button'} className=' d-inline-flex' whileTap={{ scale: 0.6 }} >
                   <i className="bi bi-stop-fill"></i>
                   </motion.div></span>
                 {/* <span className='text-white mx-1 '><i className="bi  bi-arrow-repeat"></i></span > */}
