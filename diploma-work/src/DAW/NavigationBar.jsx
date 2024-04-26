@@ -4,11 +4,14 @@ import { Link } from "react-router-dom";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { motion } from 'framer-motion';
 import NavStore from './NavigationStore.tsx';
+
+
 const NavigationBar = () => {
 
   const {isPlaying} = NavStore();
   const [modalShow, setModalShow] = useState(false);
   const [modalSaveShow, setModalSaveShow] = useState(false);
+  const {renderAudioWAV, setRenderAudioWAV} = NavStore();
   const {setTimeConverted,TimeMultiTrack,timeHour, timeMinute, timeSecond, timeMilisecond} = NavStore();
   const formattedHour = String(timeHour).padStart(2, '0');
   const formattedMinute = String(timeMinute).padStart(2, '0');
@@ -68,7 +71,7 @@ const NavigationBar = () => {
 
             </div>
             <div className='d-flex me-3'>
-              <Nav.Link href="#save" onClick={() => setModalSaveShow(true)}>File</Nav.Link>
+              <Nav.Link onClick={() => setModalSaveShow(true)}>File</Nav.Link>
               {/* <Nav.Link href="#contact">Edit</Nav.Link>
               <Nav.Link href="#contact">Settings</Nav.Link> */}
             </div>
@@ -107,7 +110,7 @@ const NavigationBar = () => {
           <Modal.Title>Zapisz jako...</Modal.Title>
         </Modal.Header>
         <Modal.Body className='d-flex flex-column gap-2'>
-          <Button variant="primary" onClick={() => { /* Tutaj dodaj logikę zapisu jako WAV */ }}>
+          <Button variant="primary" onClick={() => { setModalSaveShow(false); setRenderAudioWAV(true);  }}>
             Zapisz jako WAV
           </Button>
           <Button variant="secondary" onClick={() => { /* Tutaj dodaj logikę zapisu jako MP3 */ }}>

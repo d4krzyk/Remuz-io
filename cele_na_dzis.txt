@@ -7,3 +7,11 @@
 !!!> Problem że warstwy po usunięciu znikają
 
 
+
+
+
+Problemami były funkcje które mają przetwarzać audio w czasie ponieważ wymagają do tego specjalnych algorytmów
+
+Problemy z współgraniem dodatkowych pluginów wavesurfer z implementacją pluginu multitrack jaki tu był
+
+Przetwarzanie dźwięku ponieważ musimy przetwarzać pliki lokalne na bufory i potem znowu zamieniać je na url plików z wavesurfer

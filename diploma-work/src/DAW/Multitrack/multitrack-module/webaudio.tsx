@@ -1,7 +1,6 @@
 /**
  * Web Audio buffer player emulating the behavior of an HTML5 Audio element.
  */
-const { PitchShifter, SimpleFilter, SoundTouch, SoundTouchNode } = require('soundtouchjs');
 class WebAudioPlayer {
   private audioContext: AudioContext
   private gainNode: GainNode
@@ -96,6 +95,8 @@ class WebAudioPlayer {
   async play() {
     
     if (!this.paused) return;
+
+
     this.paused = false
     this.bufferNode?.disconnect()
     

@@ -17,6 +17,9 @@ import getPlaceholderURL from './placeholderURL.jsx'
 import { ToolsStore } from '../ToolsStore';
 import { NavStore } from '../../NavigationStore';
 import toWav from 'audiobuffer-to-wav';
+import RenderAudio from './renderAudio';
+
+
 export type TrackId = string | number
 
 type SingleTrackOptions = Omit<
@@ -614,20 +617,9 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
           const wav = toWav(player.Buffer); // Konwertuj AudioBuffer na arrayBuffer formatu WAV
           const blob = new Blob([wav], {type: 'audio/wav'}); // Stwórz Blob z danych WAV
           const urlNewAudio = URL.createObjectURL(blob);
-  
-          //console.log("buforWebaudio", webAudioPlayer.Buffer);
-          
+
           this.audios[id] = new Audio(urlNewAudio);
-          // let newStart = startSec;
-          // let newEnd = endSec;
-          // if(startSec < 0 || endSec < 5) {
-          //   newStart = 0;
-          //   newEnd = player.Buffer.duration;
-          // }
-          // if(startSec > player.Buffer.duration - 1 || endSec > player.Buffer.duration - 1) {
-          //   newStart = 0;
-          //   newEnd = 2 || player.Buffer.duration;
-          // }
+
           this.addTrack({
             id: this.tracks[id].id,
             url:  this.audios[id].src,
@@ -806,39 +798,64 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         this.currentTime = 0;
         this.emit('canplay')
 
-      //})
-
 
     }
   }
 
-  
+  public async renderMultiTrackAudio() {
 
-  public getAudioTrackCombined() {
-    // const audioContext = new (window.AudioContext)();
-    // const tracksBuffers = this.tracks.map(track => {
-    //   const source = audioContext.createBufferSource();
+    
+    
+    const indexes = Array.from(this.tracks.keys());
+    const maxDuration = this.tracks.reduce((max, track, index) => {
+      if (track.id !== PLACEHOLDER_TRACK.id) {
+        return Math.max(max, track.startPosition + this.durations[index]);
+      } else {return max;}
+    }, 0);
+
+    const sampleRate = 44100; // Standardowa częstotliwość próbkowania
+    const OffContext = new OfflineAudioContext(2, sampleRate * maxDuration, sampleRate)
+    for (let index of indexes) {
+      if(this.tracks[index].id === PLACEHOLDER_TRACK.id){continue;}
+      else if (this.tracks[index].url){
+        console.log("index: ", index)
       
-    //   source.buffer = this.audios[parseInt(track.id)]; // Zakładam, że track.audio jest buforem audio
-    //   return { source, delay: track.startPosition }; // Zakładam, że track.delay jest opóźnieniem
-    // });
-  
-    // const maxDelay = Math.max(...tracksBuffers.map(t => t.delay));
-    // const output = audioContext.createBuffer(2, maxDelay + Math.max(...tracksBuffers.map(t => t.source.buffer.length)), audioContext.sampleRate);
-  
-    // tracksBuffers.forEach(({ source, delay }) => {
-    //   for (let channel = 0; channel < output.numberOfChannels; channel++) {
-    //     const outputData = output.getChannelData(channel);
-    //     const sourceData = source.buffer.getChannelData(channel);
-    //     for (let i = 0; i < sourceData.length; i++) {
-    //       outputData[i + delay] += sourceData[i];
-    //     }
-    //   }
-    // });
-  
-    // return output;
-  }
 
+        const track = this.tracks[index];
+        const audio = this.audios[index];
+        const duration = this.durations[index];
+        const startPosition = track.startPosition;
+        //console.log("startPosition: ", startPosition, " duration: ", duration, " audio: ", audio)
+        if (audio instanceof WebAudioPlayer) {
+            const source = OffContext.createBufferSource();
+            source.buffer = audio.Buffer;
+            source.connect(OffContext.destination);
+            // Rozpocznij odtwarzanie w odpowiednim miejscu i czasie
+            source.start(startPosition, 0, duration);
+            console.log(source)
+        }
+        else {
+          const response = await fetch(audio.src);
+          const arrayBuffer = await response.arrayBuffer();
+          const audioBuffer = await OffContext.decodeAudioData(arrayBuffer);
+          // Utwórz BufferSource z danymi audio
+          const source = OffContext.createBufferSource();
+          source.buffer = audioBuffer;
+          source.connect(OffContext.destination);
+          // Rozpocznij odtwarzanie w odpowiednim miejscu i czasie
+          source.start(startPosition, 0, duration);
+        }
+      } 
+    }
+
+    const renderedBuffer = await OffContext.startRendering();
+    let renderAudio = new RenderAudio();
+    renderAudio.renderAsMp3(renderedBuffer);
+  }
+   
+  
+
+  
   public destroy() {
     if (this.frameRequest) cancelAnimationFrame(this.frameRequest)
 
@@ -1042,8 +1059,6 @@ function initRendering(tracks: MultitrackTracks, options: MultitrackOptions) {
   }
   
 }
-
-
 
 
 function initDragging(container: HTMLElement, onDrag: (delta: number) => void, rightButtonDrag = false) {

@@ -4,6 +4,8 @@ import { create } from 'zustand';
 type Store = {
   isPlaying: boolean;
   setIsPlaying: (value: boolean) => void;
+  renderAudioWAV: boolean;
+  setRenderAudioWAV: (value: boolean) => void;
   TimeMultiTrack: number;
   timeHour: number;
   timeMinute: number;
@@ -17,6 +19,8 @@ type Store = {
 export const NavStore = create<Store>(set => ({
   isPlaying: false,
   setIsPlaying: (value) => set({ isPlaying: value }),
+  renderAudioWAV: false,
+  setRenderAudioWAV: (value) => set({ renderAudioWAV: value }),
   TimeMultiTrack: 0,
   timeHour: 0,
   timeMinute: 0,

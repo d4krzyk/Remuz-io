@@ -6,7 +6,7 @@ import { useDrop } from 'react-dnd';
 import NavStore from '../NavigationStore.tsx';
 import { Modal, Button, Form } from 'react-bootstrap';
 import VolumeMeterStore from '../VolumeMeterStore.jsx';
-
+import lamejs from 'lamejs';
 
 const MultiTrackPlayer = () => {
   const [showTrashModal, setShowTrashModal] = useState(false);
@@ -202,6 +202,7 @@ const MultiTrackPlayer = () => {
   const [layerEnvelope, setLayerEnvelope] = useState({});
   const [layerMarkerStart, setLayerMarkerStart] = useState({});
   const [layerMarkerEnd, setLayerMarkerEnd] = useState({});
+  const {renderAudioWAV, setRenderAudioWAV} = NavStore();
   const trackNameRef = useRef('');
   //console.log(isTrashOption);
   // Funkcja, która zostanie wywołana po kliknięciu na track
@@ -340,6 +341,14 @@ const MultiTrackPlayer = () => {
       //console.log(`Track ${id} envelope points updated to`, points)
     })
     //setMultitrackInstance(multitrack); // zapisujemy instancję multitrack w stanie
+    if(renderAudioWAV)
+    {
+      console.log('Renderowanie audio')
+      multitrackInstance.renderMultiTrackAudio();
+      setRenderAudioWAV(false);
+      
+    }
+
 
     let intervalTime = setInterval(() => {
       setTimeMultiTrack(multitrackInstance.currentTime);
@@ -404,7 +413,6 @@ const MultiTrackPlayer = () => {
     // Zoom
 
 
-
     // Destroy all wavesurfer instances on unmount
     // This should be called before calling initMultiTrack again to properly clean up
     window.onbeforeunload = () => {
@@ -423,7 +431,8 @@ const MultiTrackPlayer = () => {
     //console.log('Multitrack instance created', multitrackInstance);
     }
 
-  }, [ multitrackInstance, CurrentLayerID, setTimeMultiTrack, layerMarkerStart, layerMarkerEnd, layerEnvelope]);
+  }, [ multitrackInstance, CurrentLayerID, renderAudioWAV, setTimeMultiTrack,
+     layerMarkerStart, layerMarkerEnd, layerEnvelope]);
 
 
   useEffect(() => {
