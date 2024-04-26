@@ -14,8 +14,6 @@ import EventEmitter from 'wavesurfer.js/dist/event-emitter.js'
 import { makeDraggable } from 'wavesurfer.js/dist/draggable.js'
 import WebAudioPlayer from './webaudio'
 import getPlaceholderURL from './placeholderURL.jsx'
-import { ToolsStore } from '../ToolsStore';
-import { NavStore } from '../../NavigationStore';
 import toWav from 'audiobuffer-to-wav';
 import RenderAudio from './renderAudio';
 
@@ -113,36 +111,26 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
   private audioContext: AudioContext
 
 
-
   static create(tracks: MultitrackTracks, options: MultitrackOptions): MultiTrack {
     return new MultiTrack(tracks, options)
   }
-
   constructor(tracks: MultitrackTracks, options: MultitrackOptions) {
     super()
-
     this.audioContext = new AudioContext()
-
     this.tracks = tracks.concat({ ...PLACEHOLDER_TRACK }).map((track) => ({
       ...track,
       startPosition: track.startPosition || 0,
       peaks: track.peaks || (track.url || track.options?.media ? undefined : [new Float32Array(1024)]),
     }))
     this.options = options
-
     this.rendering = initRendering(this.tracks, this.options)
-
     this.rendering.addDropHandler((trackId: TrackId) => {
       this.emit('drop', { id: trackId })
     })
 
-
-
     this.initAllAudios().then((durations) => {
       this.initDurations(durations)
-
       this.initAllWavesurfers()
-
       this.rendering.containers.forEach((container, index) => {
         if (tracks[index]?.draggable) {
           const unsubscribe = initDragging(
@@ -153,19 +141,14 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
           this.wavesurfers[index].once('destroy', unsubscribe)
         }
       })
-
       this.rendering.addClickHandler((position) => {
         this.seekTo(position)
       })
-
       this.emit('canplay')
     })
   }
-
-
   private initDurations(durations: number[]) {
     this.durations = durations
-
     this.maxDuration = this.tracks.reduce((max, track, index) => {
       return Math.max(max, track.startPosition + durations[index])
     }, 0)
@@ -175,35 +158,27 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
       ;(placeholderAudio as WebAudioPlayer & { duration: number }).duration = this.maxDuration
       this.durations[placeholderAudioIndex] = this.maxDuration
     }
-
     this.rendering.setMainWidth(durations, this.maxDuration)
   }
-
   private initAudio(track: TrackOptions): Promise<HTMLAudioElement | WebAudioPlayer> {
     const isIOS = /iPhone|iPad/.test(navigator.userAgent)
     const isPlaceholderTrack = track.id === PLACEHOLDER_TRACK.id
     const audio =
       track.options?.media || (isIOS || isPlaceholderTrack ? new WebAudioPlayer(this.audioContext) : new Audio())
-
     audio.crossOrigin = 'anonymous'
-
     if (track.url) {
       audio.src = track.url
     }
-
     if (track.volume !== undefined) audio.volume = track.volume
-
     return new Promise<typeof audio>((resolve) => {
       if (!audio.src) return resolve(audio)
       ;(audio as HTMLAudioElement).addEventListener('loadedmetadata', () => resolve(audio), { once: true })
     })
   }
-
   private async initAllAudios(): Promise<number[]> {
     this.audios = await Promise.all(this.tracks.map((track) => this.initAudio(track)))
     return this.audios.map((a) => (a.src ? a.duration : 0))
   }
-
   private initWavesurfer(track: TrackOptions, index: number): WaveSurfer {
     const container = this.rendering.containers[index]
 
@@ -429,36 +404,29 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
     return ws
   
   }
-
   private initAllWavesurfers() {
     
     const wavesurfers = this.tracks.map((track, index) => {
       return this.initWavesurfer(track, index)
     })
-
     this.wavesurfers = wavesurfers
     
   }
-
   private updatePosition(time: number, autoCenter = false) {
     const precisionSeconds = 0.3
     const isPaused = !this.isPlaying()
-
     if (time !== this.currentTime) {
       this.currentTime = time
       this.rendering.updateCursor(time / this.maxDuration, autoCenter)
     }
-
     // Update the current time of each audio
     this.tracks.forEach((track, index) => {
       const audio = this.audios[index]
       const duration = this.durations[index]
       const newTime = time - track.startPosition
-
       if (audio && Math.abs(audio.currentTime - newTime) > precisionSeconds) {
         audio.currentTime = Math.max(0, newTime)
       }
-
       // If the position is out of the track bounds, pause it
       if (isPaused || newTime < 0 || newTime > duration) {
         audio && !audio.paused && audio.pause()
@@ -466,13 +434,11 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         // If the position is in the track bounds, play it
         audio && audio.paused && audio.play()
       }
-
       // Unmute if cue is reached
       const isMuted = newTime < (track.startCue || 0) || newTime > (track.endCue || Infinity)
       if (audio && isMuted !== audio.muted) audio.muted = isMuted
     })
   }
-
   private onDrag(index: number, delta: number) {
     const track = this.tracks[index]
     if (!track.draggable) return
@@ -480,7 +446,6 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
     const newStartPosition = track.startPosition + delta * this.maxDuration
     const minStart = this.options.dragBounds ? 0 : -this.durations[index] - 1
     const maxStart = this.maxDuration - this.durations[index]
-
     if (newStartPosition >= minStart && newStartPosition <= maxStart) {
       track.startPosition = newStartPosition
       this.initDurations(this.durations)
@@ -489,11 +454,9 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
       this.emit('start-position-change', { id: track.id, startPosition: newStartPosition })
     }
   }
-
   private findCurrentTracks(): number[] {
     // Find the audios at the current time
     const indexes: number[] = []
-
     this.tracks.forEach((track, index) => {
       if (
         (track.url || track.options?.media) &&
@@ -503,15 +466,12 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         indexes.push(index)
       }
     })
-
     if (indexes.length === 0) {
       const minStartTime = Math.min(...this.tracks.filter((t) => t.url).map((track) => track.startPosition))
       indexes.push(this.tracks.findIndex((track) => track.startPosition === minStartTime))
     }
-
     return indexes
   }
-
   private startSync() {
     const onFrame = () => {
       const position = this.audios.reduce<number>((pos, audio, index) => {
@@ -520,51 +480,41 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         }
         return pos
       }, this.currentTime)
-
       if (position > this.currentTime) {
         this.updatePosition(position, true)
       }
-
       this.frameRequest = requestAnimationFrame(onFrame)
-    }
-
+      }
     onFrame()
-  }
-
+    }
   public play() {
     if (this.audioContext && this.audioContext.state === 'suspended') {
       this.audioContext.resume()
     }
-    
     this.startSync()
-    
     const indexes = this.findCurrentTracks()
     indexes.forEach((index) => {
-    if (this.audios[index]) {
-      
-
-      const playPromise = this.audios[index].play();
-      if (playPromise !== undefined) {
-        playPromise.then(_ => {
-
-          // Automatic playback started!
-          // Show playing UI.
-        })
-        .catch(error => {
-          // Auto-play was prevented
-          // Show paused UI.
-          console.error("Error playing audio: ", error, " audio id: ", index);
-        });
+      if (this.audios[index]) {
+        const playPromise = this.audios[index].play();
+        if (playPromise !== undefined) {
+          playPromise.then(_ => {
+            // Automatic playback started!
+            // Show playing UI.
+          })
+            .catch(error => {
+              // Auto-play was prevented
+              // Show paused UI.
+              console.error("Error playing audio: ", error, " audio id: ", index);
+            });
+        }
       }
-    }
-  })
-}
+    })
+  }
   
   public pause() {
     this.audios.forEach((audio) => {
       if (!audio.paused) {
         audio.pause()
-
       }
     })
   }
@@ -572,7 +522,6 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
   public stop() {
     this.audios.forEach((audio) => {
       if (!audio.paused) {
-
         audio.pause();
       }
       audio.currentTime = 0; // Ustawienie czasu audio na początek
@@ -589,10 +538,16 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         player.src = src;
         if (player instanceof WebAudioPlayer)
           {
-
+            if(startSec < 0){ 
+              startSec = 0;
+            }
+            if(endSec > player.Buffer.duration){
+              endSec = player.Buffer.duration;
+            }
             if(option === 'cut')
               {
                 player.cutSegment(startSec, endSec);
+                this.tracks[id].startPosition = startSec;
               }
             else if(option === 'delete')
               {
@@ -605,7 +560,6 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
             else if(option === 'reverse')
               {
                 player.reverseSegment(startSec, endSec);
-
               }
             else if(option === 'speed')
                 {
@@ -613,13 +567,10 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
                   player.speedSegment(startSec, endSec, speedRatio);
 
                 }
-
           const wav = toWav(player.Buffer); // Konwertuj AudioBuffer na arrayBuffer formatu WAV
           const blob = new Blob([wav], {type: 'audio/wav'}); // Stwórz Blob z danych WAV
           const urlNewAudio = URL.createObjectURL(blob);
-
           this.audios[id] = new Audio(urlNewAudio);
-
           this.addTrack({
             id: this.tracks[id].id,
             url:  this.audios[id].src,
@@ -645,7 +596,6 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
           console.log("Operacja nieobsługiwana dla HTMLAudioElement.");
         }
         
-
         
       });
   }
@@ -659,7 +609,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
     } else {
 
       // Utwórz MediaElementAudioSourceNode z HTMLAudioElement
-      const source = this.audioContext.createMediaElementSource(audioPlayer);
+      this.audioContext.createMediaElementSource(audioPlayer);
       audioPlayer.src = this.audios[id].src;
       //console.log("Źródło audio: ", audioPlayer.src);
       // Utwórz nową instancję WebAudioPlayer z AudioContext
@@ -698,7 +648,6 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
     this.updatePosition(position * this.maxDuration)
     if (wasPlaying) this.play()
   }
-
   /** Set time in seconds */
   public setTime(time: number) {
     const wasPlaying = this.isPlaying()
@@ -712,7 +661,6 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
     this.rendering.setMainWidth(this.durations, this.maxDuration)
     this.rendering.setContainerOffsets()
   }
-
   public addTrack(track: TrackOptions) {
     //console.log("id:", this.tracks.findIndex((t) => t.id === track.id ) )
 
@@ -801,9 +749,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
 
     }
   }
-
-  public async renderMultiTrackAudio() {
-
+  public async renderMultiTrackAudio(option: string, RenderName: string, bitrate: number) {
     
     
     const indexes = Array.from(this.tracks.keys());
@@ -812,15 +758,14 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         return Math.max(max, track.startPosition + this.durations[index]);
       } else {return max;}
     }, 0);
-
     const sampleRate = 44100; // Standardowa częstotliwość próbkowania
+    if(maxDuration === 0) return;
     const OffContext = new OfflineAudioContext(2, sampleRate * maxDuration, sampleRate)
     for (let index of indexes) {
       if(this.tracks[index].id === PLACEHOLDER_TRACK.id){continue;}
       else if (this.tracks[index].url){
         console.log("index: ", index)
       
-
         const track = this.tracks[index];
         const audio = this.audios[index];
         const duration = this.durations[index];
@@ -847,14 +792,19 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         }
       } 
     }
-
     const renderedBuffer = await OffContext.startRendering();
-    let renderAudio = new RenderAudio();
-    renderAudio.renderAsMp3(renderedBuffer);
+    const renderAudio = new RenderAudio();
+    if(option === 'wav')
+      {
+        renderAudio.renderAsWav(renderedBuffer, RenderName);
+      }
+    else if(option === 'mp3')
+      {
+        renderAudio.renderAsMp3(renderedBuffer, RenderName, bitrate);
+      }
+    
   }
-   
   
-
   
   public destroy() {
     if (this.frameRequest) cancelAnimationFrame(this.frameRequest)
@@ -1059,6 +1009,7 @@ function initRendering(tracks: MultitrackTracks, options: MultitrackOptions) {
   }
   
 }
+
 
 
 function initDragging(container: HTMLElement, onDrag: (delta: number) => void, rightButtonDrag = false) {

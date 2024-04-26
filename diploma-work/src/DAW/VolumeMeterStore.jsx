@@ -1,5 +1,5 @@
 // VolumeMeterStore.js
-import create from 'zustand';
+import {create} from 'zustand';
 
 const VolumeMeterStore = create((set) => ({
   audio: null,

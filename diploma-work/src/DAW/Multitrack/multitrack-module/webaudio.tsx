@@ -93,9 +93,11 @@ class WebAudioPlayer {
   }
 
   async play() {
-    
+    if (!this.audioContext || !this.buffer || !this.gainNode || typeof this.playedDuration !== 'number' || this.playedDuration < 0) {
+      console.error("Invalid state for play");
+      return;
+    }
     if (!this.paused) return;
-
 
     this.paused = false
     this.bufferNode?.disconnect()
@@ -103,9 +105,7 @@ class WebAudioPlayer {
     this.bufferNode = this.audioContext.createBufferSource();
     this.bufferNode.buffer = this.buffer;
     this.bufferNode.connect(this.gainNode);
-    
-
-
+  
     const offset = this.playedDuration > 0 ? this.playedDuration : 0
     const start =
       this.playedDuration > 0 ? this.audioContext.currentTime : this.audioContext.currentTime - this.playedDuration
@@ -357,8 +357,17 @@ class WebAudioPlayer {
         console.error('Invalid segment range.');
         return;
     }
+    if (speedFactor <= 0) {
+      console.error("Invalid speed factor", speedFactor);
+      return;
+    }
 
     let newLength = Math.round((endOffset - startOffset) / speedFactor) + (this.buffer.length - (endOffset - startOffset));
+    if (newLength <= 0 || isNaN(newLength) ) {
+      console.error('Invalid new length for the buffer.');
+      return;
+    }
+    console.log("New length: ", newLength, "channels", this.buffer.numberOfChannels, "sample rate", this.buffer.sampleRate)
     let newBuffer = this.audioContext.createBuffer(this.buffer.numberOfChannels, newLength, this.buffer.sampleRate);
     function cubicInterpolate(y0: number, y1: number, y2: number, y3: number, mu: number) {
       let a0, a1, a2, a3, mu2;

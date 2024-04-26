@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Navbar, Nav, Modal, Button, FormControl } from 'react-bootstrap';
+import { Navbar, Nav, Modal, Button, FormControl, Form } from 'react-bootstrap';
 import { Link } from "react-router-dom";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { motion } from 'framer-motion';
@@ -11,24 +11,38 @@ const NavigationBar = () => {
   const {isPlaying} = NavStore();
   const [modalShow, setModalShow] = useState(false);
   const [modalSaveShow, setModalSaveShow] = useState(false);
-  const {renderAudioWAV, setRenderAudioWAV} = NavStore();
+  const {setRenderAudioWAV} = NavStore();
+  const {setRenderAudioMP3} = NavStore();
   const {setTimeConverted,TimeMultiTrack,timeHour, timeMinute, timeSecond, timeMilisecond} = NavStore();
   const formattedHour = String(timeHour).padStart(2, '0');
   const formattedMinute = String(timeMinute).padStart(2, '0');
   const formattedSecond = String(timeSecond).padStart(2, '0');
   const formattedMilisecond = String(Math.round(timeMilisecond / 10)).padStart(2, '0');
   //console.log(timeSecond)
-  const [bpm, setBpm] = useState(140.00);
-  // function handlePauseMusic() {
-  //   setIsPlaying(!isPlaying)
-  // }
-  // function handleStopMusic() {
-  //   setIsPlaying(false)
-  // }
-  useEffect(() => { setTimeConverted(TimeMultiTrack) }, [TimeMultiTrack, setTimeConverted]);
+  //const [bpm, setBpm] = useState(140.00);
+  const progressBar = NavStore( state => state.progressBar);
+  const setProgressBar = NavStore(state => state.setProgressBar);
+  const [showExitButton, setShowExitButton] = useState(true);
+  const { ProjectName, setProjectName } = NavStore();
+  const { bitrate, setBitrate } = NavStore();
+
+
+  useEffect(() => {
+
+    if (modalSaveShow) {
+      setShowExitButton(progressBar === 0);
+    }
+    if (progressBar === 100) {
+      setProgressBar(0);
+      setShowExitButton(progressBar === 0);
+      setModalSaveShow(false);
+    }
+    setTimeConverted(TimeMultiTrack)
+  }, [progressBar, setProgressBar,
+    modalSaveShow, TimeMultiTrack, setTimeConverted]);
 
   const handleBpmChange = (event) => {
-    setBpm(parseFloat(event.target.value).toFixed(2));
+    //setBpm(parseFloat(event.target.value).toFixed(2));
   }
   return (
     <Navbar className=' sticky-top' bg="light" expand="sm">
@@ -71,9 +85,7 @@ const NavigationBar = () => {
 
             </div>
             <div className='d-flex me-3'>
-              <Nav.Link onClick={() => setModalSaveShow(true)}>File</Nav.Link>
-              {/* <Nav.Link href="#contact">Edit</Nav.Link>
-              <Nav.Link href="#contact">Settings</Nav.Link> */}
+              <Nav.Link onClick={() => {setModalSaveShow(true);setProgressBar(0);} }>File</Nav.Link>
             </div>
           </div>
         </Nav>
@@ -90,7 +102,7 @@ const NavigationBar = () => {
         <Modal.Body>
             <FormControl
                 type="number"
-                value={bpm}
+                //value={bpm}
                 onChange={handleBpmChange}
               />
         </Modal.Body>
@@ -103,19 +115,56 @@ const NavigationBar = () => {
 
       <Modal
         show={modalSaveShow}
-        onHide={() => setModalSaveShow(false)}
+        backdrop="static"
+        keyboard={false}
         centered
+
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Zapisz jako...</Modal.Title>
+        <Modal.Header className="d-flex justify-content-between">
+            <Modal.Title>Zapisz jako...</Modal.Title>
+            <Button variant="secondary" disabled={!showExitButton} onClick={() => setModalSaveShow(false)}>Cancel</Button>
         </Modal.Header>
         <Modal.Body className='d-flex flex-column gap-2'>
-          <Button variant="primary" onClick={() => { setModalSaveShow(false); setRenderAudioWAV(true);  }}>
+          <Form>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Nazwa pliku</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Wpisz nazwę pliku"
+                value={ProjectName}
+                onChange={e => setProjectName(e.target.value)}
+              />
+            </Form.Group>
+
+
+            <Form.Group className="mb-3">
+              <Form.Label>Bitrate (kbps) dla MP3</Form.Label>
+              <Form.Select value={bitrate} onChange={e => setBitrate(e.target.value)}>
+                <option value="320">320 kbps</option>
+                <option value="256">256 kbps</option>
+                <option value="224">224 kbps</option>
+                <option value="192">192 kbps</option>
+                <option value="160">160 kbps</option>
+                <option value="128">128 kbps</option>
+                <option value="112">112 kbps</option>
+                <option value="96">96 kbps</option>
+              </Form.Select>
+            </Form.Group>
+
+          </Form>
+
+          <Button disabled={!showExitButton} variant="primary" onClick={() => { setRenderAudioWAV(true); setShowExitButton(false) }}>
             Zapisz jako WAV
           </Button>
-          <Button variant="secondary" onClick={() => { /* Tutaj dodaj logikę zapisu jako MP3 */ }}>
+          <Button disabled={!showExitButton} variant="secondary" onClick={() => { setRenderAudioMP3(true); setShowExitButton(false)}}>
             Zapisz jako MP3
           </Button>
+          <div className='mt-3  progress'>
+          <div role='progressbar' className='progress-bar progress-bar-striped progress-bar-animated' aria-valuenow={progressBar} aria-valuemin="0" aria-valuemax="100" style={{width: `${progressBar}%`, backgroundColor: 'hsl(245, 30%, 45%)'}}>
+          {progressBar > 0 ? `${progressBar}%` : ''}
+          </div>
+          </div>
         </Modal.Body>
       </Modal>
 
