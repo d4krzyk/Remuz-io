@@ -16,3 +16,10 @@ Może to pomóc w edycji naszych dźwięków bez konieczności umieszczania dwó
 > Dodać możliwość podpisania danego utworu
 
 > Dodać możliwość zwiększania dozwolonych ścieżek (dodawanie pustych ścieżek)
+
+
+
+
+> Usuniecie kilku sciezek i po tym gubi sie id sciezki wybranej (do naprawy)
+
+> Czas po powrocie na home nie zeruje albo nie czyści sie bo po powrocie się buguje
