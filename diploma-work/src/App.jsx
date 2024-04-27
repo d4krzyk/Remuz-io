@@ -1,7 +1,6 @@
 // App.js
 import { Routes, Route } from 'react-router-dom';
 import Home from './Home';
-//import About from './Pages/About';
 import DAW from './DAW/DAW';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -14,7 +13,6 @@ const App = () => {
             <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/app" element={<DAW/>} />
-          {/*<Route path="/about" element={<About />} />*/}
             </Routes>
             </div>
       </div>

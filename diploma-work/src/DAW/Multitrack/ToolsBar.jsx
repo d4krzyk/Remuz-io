@@ -1,4 +1,4 @@
-import { React, useState } from 'react';
+import { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Navbar, Nav } from 'react-bootstrap';
 import { ToolsStore } from './ToolsStore.tsx';
@@ -16,10 +16,7 @@ function ToolsBar() {
       isDelFragOption,
       isMuteFragOption,
       isTrashOption,
-      isPitchOption,
-      isVolumeOption,
       isSpeedOption,
-      isPanningOption,
       isReverseOption,
       isTextFormatOption,
       turnOnOption
@@ -43,12 +40,7 @@ function ToolsBar() {
           data-toggle="tooltip" data-placement="button" title="Select tool">
           <i className='bi text-dark bi-cursor-fill' />
         </button>
-        {/* <button type="button" 
-        className={`btn py-0 px-1 ${isCopyFragOption ? 'btn-info' : 'btn-transparent'}`} 
-        onClick={() => turnOnOption('copy')}
-          data-toggle="tooltip" data-placement="button" title="Copy fragment tool">
-          <i className='bi text-dark bi-copy' />
-        </button> */}
+
         <button type="button" 
         className={`btn py-0 px-1 ${isCutFragOption ? 'btn-secondary' : 'btn-transparent'}`} 
         onClick={() => turnOnOption('cut')}
@@ -73,30 +65,14 @@ function ToolsBar() {
           data-toggle="tooltip" data-placement="button" title="Delete track">
           <i className='bi text-dark bi-trash3-fill' />
         </button>
-        {/* <button type="button" 
-        className={`btn py-0 px-1 ${isPitchOption ? 'btn-primary' : 'btn-transparent'}`} 
-        onClick={() => turnOnOption('pitch')}
-          data-toggle="tooltip" data-placement="button" title="Change Pitch track">
-          <i className='bi text-dark bi-activity' />
-        </button> */}
-        {/* <button type="button" 
-        className={`btn py-0 px-1 ${isVolumeOption ? 'bg-white' : 'btn-transparent'}`} 
-        onClick={() => turnOnOption('volume')}
-          data-toggle="tooltip" data-placement="button" title="Change Volume track">
-          <i className='bi text-dark bi-sliders2-vertical' />
-        </button> */}
+
         <button type="button" 
         className={`btn py-0 px-1 ${isSpeedOption ? 'btn-info' : 'btn-transparent'}`} 
         onClick={() => turnOnOption('speed')}
           data-toggle="tooltip" data-placement="button" title="Change Speed Fragment track">
           <i className='bi text-dark bi-cassette-fill' />
         </button>
-        {/* <button type="button" 
-        className={`btn py-0 px-1 ${isPanningOption ? 'btn-warning' : 'btn-transparent'}`} 
-        onClick={() => turnOnOption('panning')}
-          data-toggle="tooltip" data-placement="button" title="Change Panning track">
-          <i className='bi text-dark bi-arrows-expand-vertical' />
-        </button> */}
+
         <button type="button" 
         className={`btn py-0 px-1 ${isReverseOption ? 'btn-success' : 'btn-transparent'}`} 
         onClick={() => turnOnOption('reverse')}

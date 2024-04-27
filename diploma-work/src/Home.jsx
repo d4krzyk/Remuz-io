@@ -55,15 +55,7 @@ function Home() {
               style={{ background: 'hsla(255, 50%, 50%)', border: 'none'}}
               >Start</motion.div>
           </Link>
-          {/* <Link to={"/about"} className="text-white">
-              <motion.div className="btn btn-secondary fs-3 px-4 mx-2"
-              initial='hidden'
-              animate='visible'
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              variants={showButton}
-              >About</motion.div>
-          </Link> */}
+
         </div>
         </div>
     </div>

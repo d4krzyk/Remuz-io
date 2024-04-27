@@ -4,7 +4,6 @@ import MultiTrackPlayer from './Multitrack/MultiTrackPlayer';
 import NavigationBar from './NavigationBar';
 import SoundLib from './SoundLib/SoundLib';
 import ToolsBar from './Multitrack/ToolsBar';
-import VolumeMeterContainer from './VolumeMeterContainer';
 function DAW() {
 
 

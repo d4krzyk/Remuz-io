@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Navbar, Nav, Modal, Button, FormControl, Form } from 'react-bootstrap';
+import { Navbar, Nav, Modal, Button, Form } from 'react-bootstrap';
 import { Link } from "react-router-dom";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { motion } from 'framer-motion';
@@ -9,7 +9,6 @@ import NavStore from './NavigationStore.tsx';
 const NavigationBar = () => {
 
   const {isPlaying} = NavStore();
-  const [modalShow, setModalShow] = useState(false);
   const [modalSaveShow, setModalSaveShow] = useState(false);
   const {setRenderAudioWAV} = NavStore();
   const {setRenderAudioMP3} = NavStore();
@@ -18,8 +17,7 @@ const NavigationBar = () => {
   const formattedMinute = String(timeMinute).padStart(2, '0');
   const formattedSecond = String(timeSecond).padStart(2, '0');
   const formattedMilisecond = String(Math.round(timeMilisecond / 10)).padStart(2, '0');
-  //console.log(timeSecond)
-  //const [bpm, setBpm] = useState(140.00);
+
   const progressBar = NavStore( state => state.progressBar);
   const setProgressBar = NavStore(state => state.setProgressBar);
   const [showExitButton, setShowExitButton] = useState(true);
@@ -41,9 +39,7 @@ const NavigationBar = () => {
   }, [progressBar, setProgressBar,
     modalSaveShow, TimeMultiTrack, setTimeConverted]);
 
-  const handleBpmChange = (event) => {
-    //setBpm(parseFloat(event.target.value).toFixed(2));
-  }
+
   return (
     <Navbar className=' sticky-top' bg="light" expand="sm">
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -63,15 +59,9 @@ const NavigationBar = () => {
                   <motion.div id={'stop-music-button'} className=' d-inline-flex' whileTap={{ scale: 0.6 }} >
                   <i className="bi bi-stop-fill"></i>
                   </motion.div></span>
-                {/* <span className='text-white mx-1 '><i className="bi  bi-arrow-repeat"></i></span > */}
+
               </div>
-              {/*<div id='bpm-box' className='column p-2 d-flex align-content-end bg-dark' 
-                style={{ borderTopRightRadius: '8px', borderBottomRightRadius: '8px',
-                borderTopLeftRadius: '0px', borderBottomLeftRadius: '0px' }}
-                onClick={() => setModalShow(true)}>
-                <div id='bpm-value' className='d-flex justify-content-start text-white me-1 '>{bpm}</div >
-                <span className='text-white ms-1 me-0 '>BPM</span >
-              </div>*/}
+
               <div className='column ms-4 p-2 d-flex align-content-end bg-dark rounded-3'>
                 <div id='hour' className='text-white '>{formattedHour}</div >
                 <span className='text-white mx-1'>:</span >
@@ -92,33 +82,10 @@ const NavigationBar = () => {
       </Navbar.Collapse>
 
       <Modal
-        show={modalShow}
-        onHide={() => setModalShow(false)}
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Zmień BPM</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-            <FormControl
-                type="number"
-                //value={bpm}
-                onChange={handleBpmChange}
-              />
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setModalShow(false)}>
-            Zamknij
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      <Modal
         show={modalSaveShow}
         backdrop="static"
         keyboard={false}
         centered
-
       >
         <Modal.Header className="d-flex justify-content-between">
             <Modal.Title>Zapisz jako...</Modal.Title>

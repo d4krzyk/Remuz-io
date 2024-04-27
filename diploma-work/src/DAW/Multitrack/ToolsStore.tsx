@@ -7,10 +7,7 @@ type State = {
   isDelFragOption: boolean;
   isTrashOption: boolean;
   isMuteFragOption: boolean;
-  isPitchOption: boolean;
-  isVolumeOption: boolean;
   isSpeedOption: boolean;
-  isPanningOption: boolean;
   isReverseOption: boolean;
   isTextFormatOption: boolean;
   setIsSelectOption: (value: boolean) => void;
@@ -32,17 +29,8 @@ export const ToolsStore = create<State>(set => ({
   isTrashOption: false,
   setIsTrashOption: (value: boolean) => set({ isTrashOption: value }),
 
-  isPitchOption: false,
-  setIsPitchOption: (value: boolean) => set({ isPitchOption: value }),
-
-  isVolumeOption: false,
-  setIsVolumeOption: (value: boolean) => set({ isVolumeOption: value }),
-
   isSpeedOption: false,
   setIsSpeedOption: (value: boolean) => set({ isSpeedOption: value }),
-
-  isPanningOption: false,
-  setIsPanningOption: (value: boolean) => set({ isPanningOption: value }),
 
   isReverseOption: false,
   setIsReverseOption: (value: boolean) => set({ isReverseOption: value }),
@@ -56,10 +44,7 @@ export const ToolsStore = create<State>(set => ({
     isDelFragOption: option === 'delete',
     isMuteFragOption: option === 'mute',
     isTrashOption: option === 'trash',
-    isPitchOption: option === 'pitch',
-    isVolumeOption: option === 'volume',
     isSpeedOption: option === 'speed',
-    isPanningOption: option === 'panning',
     isReverseOption: option === 'reverse',
     isTextFormatOption: option === 'textFormat',
   })),

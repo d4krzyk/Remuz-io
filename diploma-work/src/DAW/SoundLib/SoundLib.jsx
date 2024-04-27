@@ -16,7 +16,7 @@ function SoundItem({ sound, showSound, currentFileID, isPlaying, togglePlayback,
   }))
 
   useEffect(() => {
-    // Tutaj możesz użyć zmiennej drag, jeśli jest to konieczne
+
   }, []);
 
   return (
