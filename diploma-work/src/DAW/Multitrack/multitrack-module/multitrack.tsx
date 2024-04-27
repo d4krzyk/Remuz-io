@@ -203,6 +203,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
       hideScrollbar: true,
     })
     ws.on('loading', () => {
+      this.wavesurferReadyStatus[index] = false;
       this.showLoadingScreen(index.toString());
       //console.log("ws load")
     });
@@ -496,13 +497,20 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
       }
     onFrame()
     }
+  private startSyncIfAllReady() {
+      if (this.wavesurferReadyStatus.every(status => status === true)) {
+        this.startSync();
+      }
+    }
   public play() {
     if (this.audioContext && this.audioContext.state === 'suspended') {
       this.audioContext.resume()
     }
-    this.startSync()
+    
+    this.startSyncIfAllReady()
     const indexes = this.findCurrentTracks()
     indexes.forEach((index) => {
+      if(this.wavesurferReadyStatus[index] === true){
       if (this.audios[index]) {
         const playPromise = this.audios[index].play();
         if (playPromise !== undefined) {
@@ -517,6 +525,10 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
             });
         }
       }
+    }
+    else{
+      this.stop();
+    }
     })
   }
   
