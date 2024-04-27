@@ -109,6 +109,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
   private frameRequest: number | null = null
   private subscriptions: Array<() => void> = []
   private audioContext: AudioContext
+  private wavesurferReadyStatus: Array<boolean> = []
 
 
   static create(tracks: MultitrackTracks, options: MultitrackOptions): MultiTrack {
@@ -183,7 +184,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
     const container = this.rendering.containers[index]
 
     
-
+    
     // Create a wavesurfer instance
     const ws = WaveSurfer.create({
       ...track.options,
@@ -201,6 +202,15 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
       interact: false,
       hideScrollbar: true,
     })
+    ws.on('loading', () => {
+      this.showLoadingScreen(index.toString());
+      //console.log("ws load")
+    });
+    ws.on('ready', () => {
+      //console.log("ws ready")
+      this.hideLoadingScreen(index.toString());
+      this.wavesurferReadyStatus[index] = true;
+    });
 
     if (track.id === PLACEHOLDER_TRACK.id) {
       ws.registerPlugin(
@@ -294,7 +304,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
             this.subscriptions.push(
               MarkerRegion.on('update-end', () => {
                 if (track.markers && track.markers.length > 0) {
-                  console.log("markery: ", track.markers)
+                  //console.log("markery: ", track.markers)
                   track.markers[0].time = MarkerRegion.start
                   track.markers[0].end = MarkerRegion.end
                 
@@ -400,7 +410,6 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         }),
       )
     }
-    this.hideLoadingScreen(track.id.toString());
     return ws
   
   }
@@ -528,14 +537,19 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
     });
     this.updatePosition(0,false)
   }
+  isWaveSurferReady(id: number): boolean {
+    return this.wavesurferReadyStatus[id] || false;
+  }
   private processAudioPlayer = (player: WebAudioPlayer, src: string, id: number, 
     startSec: number, endSec: number, speedRatio: number,  option: string) => {
+      
     fetch(src)
       .then(response => response.arrayBuffer())
       .then(arrayBuffer => this.audioContext.decodeAudioData(arrayBuffer))
       .then(audioBuffer => {
         player.Buffer = audioBuffer;
         player.src = src;
+        
         if (player instanceof WebAudioPlayer)
           {
             if(startSec < 0){ 
@@ -546,8 +560,9 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
             }
             if(option === 'cut')
               {
+                const temp_start = this.tracks[id].startPosition;
                 player.cutSegment(startSec, endSec);
-                this.tracks[id].startPosition = startSec;
+                this.tracks[id].startPosition = startSec + temp_start;
               }
             else if(option === 'delete')
               {
@@ -563,10 +578,11 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
               }
             else if(option === 'speed')
                 {
-                  console.log("actualSpeed ratio", speedRatio)
+                  //console.log("actualSpeed ratio", speedRatio)
                   player.speedSegment(startSec, endSec, speedRatio);
 
                 }
+          
           const wav = toWav(player.Buffer); // Konwertuj AudioBuffer na arrayBuffer formatu WAV
           const blob = new Blob([wav], {type: 'audio/wav'}); // Stwórz Blob z danych WAV
           const urlNewAudio = URL.createObjectURL(blob);
@@ -602,7 +618,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
   public EditSegment(id: number, startSec: number, endSec: number, speedRatio: number, option: string) {
     let audioPlayer = this.audios[id];
 
-    this.showLoadingScreen(id.toString());
+    
     if (audioPlayer instanceof WebAudioPlayer) {
 
       this.processAudioPlayer(audioPlayer, audioPlayer.src, id, startSec, endSec, speedRatio, option);
@@ -617,7 +633,7 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
       this.processAudioPlayer(webAudioPlayer, audioPlayer.src, id, startSec, endSec, speedRatio, option);
       
     }
-    this.hideLoadingScreen(id.toString());
+
   }
 
   showLoadingScreen(trackId: string) {
@@ -657,14 +673,13 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
 
   public zoom(pxPerSec: number) {
     this.options.minPxPerSec = pxPerSec
-    this.wavesurfers.forEach((ws, index) => this.tracks[index].url && ws.zoom(pxPerSec))
+    this.wavesurfers.forEach((ws, index) => this.tracks[index].url && this.isWaveSurferReady(index) && ws.zoom(pxPerSec))
     this.rendering.setMainWidth(this.durations, this.maxDuration)
     this.rendering.setContainerOffsets()
   }
   public addTrack(track: TrackOptions) {
     //console.log("id:", this.tracks.findIndex((t) => t.id === track.id ) )
 
-    this.showLoadingScreen(track.id.toString());
     const index = this.tracks.findIndex((t) => t.id === track.id)
     if (index !== -1) {
       this.tracks[index] = track
@@ -674,16 +689,12 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         this.durations[index] = audio.duration
         this.initDurations(this.durations)
         const container = this.rendering.containers[index]
-        container.innerHTML = ''
-        const loading = document.createElement('div')
-        loading.setAttribute(
-          'style',
-          `display: none; position: absolute; z-index: 10; left: 10px; top: 10px; right: 10px; bottom: 10px; background: rgba(0,0,0,0.8); text-align: left;`,
-        )
-        loading.innerHTML = `<img src=${loadingGIF} style="height: 10vh; " alt="Loading...">`;
-        loading.id = `loading-screen-${track.id.toString()}`;
-        container.appendChild(loading)
+        if (container.firstChild instanceof Element && container.firstChild.classList.contains('dropArea')) {
+          container.removeChild(container.firstChild);
+        }
+
         this.wavesurfers[index].destroy()
+        
         this.wavesurfers[index] = this.initWavesurfer(track, index)
         
         const unsubscribe = initDragging(
@@ -714,7 +725,6 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
       }
       const index = this.tracks.findIndex((t) => t.id === trackAdd.id)
     if (index !== -1) {
-        this.showLoadingScreen(index.toString());
         this.tracks[index] = trackAdd
         this.initAudio(PLACEHOLDER_TRACK).then((audio) => {
         this.audios[index] = audio
@@ -722,15 +732,9 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         this.initDurations(this.durations)
 
         const container = this.rendering.containers[index]
-        container.innerHTML = ''
-        const loading = document.createElement('div')
-        loading.setAttribute(
-          'style',
-          `display: none; position: absolute; z-index: 10; left: 10px; top: 10px; right: 10px; bottom: 10px; background: rgba(0,0,0,0.5); text-align: center;`,
-        )
-        loading.innerHTML = `<img src=${loadingGIF} style="height: 10vh; " alt="Loading...">`;
-        loading.id = `loading-screen-${index.toString()}`;
-        container.appendChild(loading)
+        if (container.firstChild instanceof Element && container.firstChild.classList.contains('dropArea')) {
+          container.removeChild(container.firstChild);
+        }
         this.wavesurfers[index].destroy()
         this.wavesurfers[index] = this.initWavesurfer(trackAdd, index)
         const unsubscribe = initDragging(
@@ -899,6 +903,7 @@ function initRendering(tracks: MultitrackTracks, options: MultitrackOptions) {
         'style',
         `position: absolute; z-index: 10; left: 10px; top: 10px; right: 10px; bottom: 10px; border: 2px dashed ${options.trackBorderColor};`,
       )
+      dropArea.className = 'dropArea';
       dropArea.addEventListener('dragover', (e) => {
         e.preventDefault()
         dropArea.style.background = options.trackBackground || ''

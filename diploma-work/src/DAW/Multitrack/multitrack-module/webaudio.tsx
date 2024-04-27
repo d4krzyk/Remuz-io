@@ -414,7 +414,6 @@ class WebAudioPlayer {
             newChannelData[j] = oldChannelData[i];
         }
     }
-
     this.buffer = newBuffer;
     this._duration = this.buffer.duration;
 }
