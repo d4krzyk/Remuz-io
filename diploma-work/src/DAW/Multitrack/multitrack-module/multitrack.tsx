@@ -4,18 +4,18 @@
  * They can be dragged to set their start position.
  * The top track is meant for dragging'n'dropping an additional track id (not a file).
  */
-import loadingGIF from './Loading.gif';
-import './multitrack.css';
 import WaveSurfer, { type WaveSurferOptions } from 'wavesurfer.js'
+import WebAudioPlayer from './webaudio'
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.js'
 import TimelinePlugin, { type TimelinePluginOptions } from 'wavesurfer.js/dist/plugins/timeline.js'
 import EnvelopePlugin, { type EnvelopePoint, type EnvelopePluginOptions } from 'wavesurfer.js/dist/plugins/envelope.js'
 import EventEmitter from 'wavesurfer.js/dist/event-emitter.js'
 import { makeDraggable } from 'wavesurfer.js/dist/draggable.js'
-import WebAudioPlayer from './webaudio'
 import getPlaceholderURL from './placeholderURL.jsx'
 import toWav from 'audiobuffer-to-wav';
 import RenderAudio from './renderAudio';
+import './multitrack.css';
+import loadingGIF from './Loading.gif';
 
 
 export type TrackId = string | number
@@ -1004,6 +1004,7 @@ function initRendering(tracks: MultitrackTracks, options: MultitrackOptions) {
     // Do something on drop
     addDropHandler: (onDrop: (trackId: TrackId) => void) => {
       tracks.forEach((track, index) => {
+        
         if (!(track.url || track.options?.media)) {
           const droppable = containers[index].querySelector('div')
           if (droppable) {

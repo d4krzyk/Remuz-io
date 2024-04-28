@@ -206,7 +206,6 @@ const MultiTrackPlayer = () => {
     drop: (item, monitor) => {
 
       //Zapisanie czasu trwania audio do mapy
-      
       const hue = Math.floor(Math.random() * 360);
       if (multitrackInstance) { // jeśli instancja multitrack jest dostępna, dodajemy ścieżkę
         
@@ -234,6 +233,7 @@ const MultiTrackPlayer = () => {
         multitrackInstance.hideLoadingScreen(CurrentLayerID.toString());
         setIsPlaying(multitrackInstance.isPlaying());
         setHasTrackBeenSelected(true);
+        
       }
     },
     collect: (monitor) => ({
@@ -347,8 +347,8 @@ const MultiTrackPlayer = () => {
 
 
     setIsPlaying(multitrackInstance.isPlaying());
-    multitrackInstance.on('drop', async ({ id }) => {
-
+    multitrackInstance.on('drop', ({ id }) => {
+      //console.log(`Track ${id} dropped`)
       setCurrentLayerID(id);
 
     })
@@ -421,7 +421,7 @@ const MultiTrackPlayer = () => {
     //console.log('Multitrack instance created', multitrackInstance);
     }
 
-  }, [ multitrackInstance, CurrentLayerID, renderAudioWAV, renderAudioMP3, 
+  }, [ multitrackInstance, CurrentLayerID, setCurrentLayerID, renderAudioWAV, renderAudioMP3, 
     setTimeMultiTrack, layerMarkerStart, layerMarkerEnd, layerEnvelope, ProjectName,
   bitrate, setIsPlaying, setRenderAudioWAV, setRenderAudioMP3]);
 
@@ -458,6 +458,7 @@ const MultiTrackPlayer = () => {
       const id = event.currentTarget.getAttribute('track-id');
       console.log('Kliknięto na track o id: ' + id);
       idTempRef.current = id;
+      setCurrentLayerID(parseInt(id));
       if (multitrackInstance.tracks[id]?.url) {
         if (isSelectOption) {
           handleTrackSelect(id);
@@ -495,6 +496,7 @@ const MultiTrackPlayer = () => {
     }
     function confirmIndex(event) {
       const id = event.currentTarget.getAttribute('track-id');
+      setCurrentLayerID(parseInt(id));
       console.log('Potwierdzenie na track o id: ' + id);
       event.preventDefault()
       if (multitrackInstance.tracks[id]?.url) {
@@ -517,16 +519,22 @@ const MultiTrackPlayer = () => {
       }
     }
     tracks.forEach((track) => {
+      track.addEventListener('drop', dropSetIndex );
       track.addEventListener('click', selectIndex);
       track.addEventListener('contextmenu', confirmIndex);
     });
     return () => {
       tracks.forEach((track) => {
+        track.removeEventListener('drop', dropSetIndex );
         track.removeEventListener('click', selectIndex);
         track.removeEventListener('contextmenu', confirmIndex);
       });
     }
 
+    function dropSetIndex(event) {
+      const id = event.currentTarget.getAttribute('track-id');
+      setCurrentLayerID(parseInt(id));
+    }
     function handleEditFragOption(id, option) {
       //console.log('Wybieram fragment do edycji');
       let colorOption = '';
@@ -580,8 +588,8 @@ const MultiTrackPlayer = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [  isSelectOption, isCutFragOption, isMuteFragOption, isDelFragOption, showTrashModal, isTrashOption,  
         showSpeedModal, isReverseOption, isSpeedOption, showTrackNameModal, isTextFormatOption,
-        multitrackInstance, hasTrackBeenSelected, layerMarkerStart, layerMarkerEnd, 
-        layerEnvelope, setLayerEnvelope, SpeedPerc, setSpeedPerc, handleTrackSelect ]);
+        multitrackInstance, hasTrackBeenSelected, layerMarkerStart, layerMarkerEnd, layerEnvelope, 
+        setLayerEnvelope, SpeedPerc, setSpeedPerc, handleTrackSelect, CurrentLayerID, setCurrentLayerID ]);
 
 
 
