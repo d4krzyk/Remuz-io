@@ -347,7 +347,7 @@ const MultiTrackPlayer = () => {
 
 
     setIsPlaying(multitrackInstance.isPlaying());
-    multitrackInstance.on('drop', ({ id }) => {
+    multitrackInstance.on('drop', async ({ id }) => {
       //console.log(`Track ${id} dropped`)
       setCurrentLayerID(id);
 
