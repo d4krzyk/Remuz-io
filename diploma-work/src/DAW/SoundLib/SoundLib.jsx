@@ -26,8 +26,13 @@ function SoundItem({ sound, showSound, currentFileID, isPlaying, togglePlayback,
             variants={showSound}
             id="sound-box"
             className='nav-item'>
+
             <div style={{ opacity: isDragging ? 0.5 : 1}} className='nav-link bg-primary text-white m-1 py-1 px-0'>
-              <div ref={drag} className="d-flex align-items-center justify-content-between p-2" >
+              <div style={{ fontSize: '0.65rem', userSelect: 'none'}} className='mx-2 d-block text-truncate'>
+                {sound.name}
+              </div>
+              <div ref={drag} className="d-flex align-items-center justify-content-between pb-1 px-2" >
+              
                 <motion.div className=' d-inline-flex' whileTap={{ scale: 0.8 }}>
                   <i className={`bi ${currentFileID === sound.id && isPlaying ? "bi-pause-fill" : "bi-play-fill"}`}
                     onClick={() => togglePlayback(sound.id)} />
@@ -171,6 +176,7 @@ function SoundLib() {
   }
   return (
     <ul className='nav px-2 mx-1 nav-pills flex-column mb-auto'>
+      <div className='w-100'>
       <input
         type="file"
         accept="audio/mpeg, audio/wav"
@@ -197,6 +203,7 @@ function SoundLib() {
               isPlaying={isPlaying} 
               togglePlayback={togglePlayback} 
               removeSound={removeSound} />)}
+      </div>
       </div>
     </ul>
   );
