@@ -3,10 +3,6 @@
 !!!!> Integracja volume metera z głośnością
 
 
-!!!!!> Naprawienie błędu usuwania bo tracki dalej zostają ale są niewidzialne
-!!!> Problem że warstwy po usunięciu znikają
-
-
 
 
 

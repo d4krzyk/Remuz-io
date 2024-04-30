@@ -45,7 +45,10 @@ const NavigationBar = () => {
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav ms-0">
         <Nav className="mr-auto collapse navbar-collapse">
-          <Link to={"/"}>
+          <Link to={"/"} onClick={(event) => {
+            event.preventDefault();
+            window.location.href = '/';
+          }}>
             <div className='btn mx-1'>Home</div>
           </Link>
           <div className='d-flex w-100 justify-content-between'>
