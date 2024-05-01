@@ -19,7 +19,14 @@ const MultiTrackPlayer = () => {
   const [trackName, setTrackName] = useState('');
   const [SpeedPerc, setSpeedPerc] = useState(100);
 
+  const [layerMarkerStart, setLayerMarkerStart] = useState({});
+  const [layerMarkerEnd, setLayerMarkerEnd] = useState({});
+
+  const [layerEnvelope, setLayerEnvelope] = useState({});
+
   const [hasTrackBeenSelected, setHasTrackBeenSelected] = useState(false);
+
+
   const isSelectOption = ToolsStore(state => state.isSelectOption);
   const isCutFragOption = ToolsStore(state => state.isCutFragOption);
   const isDelFragOption = ToolsStore(state => state.isDelFragOption);
@@ -29,10 +36,6 @@ const MultiTrackPlayer = () => {
   const isReverseOption = ToolsStore(state => state.isReverseOption);
   const isTextFormatOption = ToolsStore(state => state.isTextFormatOption);
 
-  const [layerMarkerStart, setLayerMarkerStart] = useState({});
-  const [layerMarkerEnd, setLayerMarkerEnd] = useState({});
-
-  const [layerEnvelope, setLayerEnvelope] = useState({});
 
   const {renderAudioWAV, setRenderAudioWAV} = NavStore();
   const {renderAudioMP3, setRenderAudioMP3} = NavStore();
@@ -53,16 +56,13 @@ const MultiTrackPlayer = () => {
   const handleTrashCloseNo = () => { setShowTrashModal(false) };
   const handleTrashShow = () => { setShowTrashModal(true) };
 
-
   const handleSpeedChange = (event) => {
     setSpeedPerc(parseFloat(event.target.value));
   };
 
   const handleChangeTextTrack = (id) => {
-
     trackNameRef.current = multitrackInstance.tracks[id].intro.label;
     setTrackName(trackNameRef.current);
-    //setTrackName(currentTrackName);
     setShowTrackNameModal(true);
   }
   const handleTrackNameChange = (event) => {
@@ -73,12 +73,9 @@ const MultiTrackPlayer = () => {
       setTrackName('Track Name');
     }
     trackNameRef.current = event.target.value;
-
-    //setTrackName(event.target.value);
   };
   const handleTrackNameSubmit = (id) => {
     // Aktualizuj nazwę tracka
-    //const name = trackNameRef.current.toString();
     const name = trackName.toString();
     console.log(multitrackInstance.audios[id].duration)
     console.log(name)
@@ -107,7 +104,7 @@ const MultiTrackPlayer = () => {
   };
 
   const handleTrackSelect = (id) => {
-    // Aktualizuj nazwę tracka
+    // Sprawdź czy ścieżka została już wybrana
     if (!hasTrackBeenSelected) {
       console.log(hasTrackBeenSelected)
     multitrackInstance.addTrack({
@@ -130,7 +127,6 @@ const MultiTrackPlayer = () => {
       ],
     });
     setTimeMultiTrack(0);
-    //multitrackInstance.stop();
     setIsPlaying(multitrackInstance.isPlaying());
     setHasTrackBeenSelected(true);
     }
@@ -180,8 +176,6 @@ const MultiTrackPlayer = () => {
       });
       setTimeMultiTrack(0);
       multitrackInstance.stop();
-
-
       
       try {
         if(option === 'speed'){
@@ -190,28 +184,21 @@ const MultiTrackPlayer = () => {
           const speedFactor = SpeedPerc / 100;
           console.log(speedFactor)
           multitrackInstance.EditSegment(multitrackInstance.tracks[id].id,layerMarkerStart[id], layerMarkerEnd[id], speedFactor, option);
-
-
         }else{
           multitrackInstance.EditSegment(multitrackInstance.tracks[id].id,
             layerMarkerStart[id], layerMarkerEnd[id], 1, option);
         }
-        
       } catch (error) {
         console.error('Error editing segment:', error);
       }
-      
     }
     multitrackInstance.hideLoadingScreen(multitrackInstance.tracks[id].id.toString());
-
   };
 
-  //console.log('Opcja usuniecia main: ' + trashOption);
   const [, drop] = useDrop(() => ({
     accept: 'sound',
     drop: (item, monitor) => {
 
-      //Zapisanie czasu trwania audio do mapy
       const hue = Math.floor(Math.random() * 360);
       if (multitrackInstance) { // jeśli instancja multitrack jest dostępna, dodajemy ścieżkę
         
@@ -266,7 +253,7 @@ const MultiTrackPlayer = () => {
     {
       container: temp_containerHTML, // required!
       minPxPerSec: 50, // zoom level
-      rightButtonDrag: false, // set to true to drag with right mouse button
+      rightButtonDrag: true, // set to false to drag with left mouse button
       cursorWidth: 4,
       cursorColor: '#6c75f0',
       trackBackground: '#3d3c66',
