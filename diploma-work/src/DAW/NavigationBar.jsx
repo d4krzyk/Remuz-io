@@ -41,7 +41,7 @@ const NavigationBar = () => {
 
 
   return (
-    <Navbar className=' sticky-top' bg="light" expand="sm">
+    <Navbar className=' sticky-top' bg="light">
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav ms-0">
         <Nav className="mr-auto collapse navbar-collapse">
@@ -91,17 +91,17 @@ const NavigationBar = () => {
         centered
       >
         <Modal.Header className="d-flex justify-content-between">
-            <Modal.Title>Zapisz jako...</Modal.Title>
+            <Modal.Title>Save As...</Modal.Title>
             <Button variant="secondary" disabled={!showExitButton} onClick={() => setModalSaveShow(false)}>Cancel</Button>
         </Modal.Header>
         <Modal.Body className='d-flex flex-column gap-2'>
           <Form>
 
             <Form.Group className="mb-3">
-              <Form.Label>Nazwa pliku</Form.Label>
+              <Form.Label>File name</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Wpisz nazwę pliku"
+                placeholder="Enter the file name"
                 value={ProjectName}
                 onChange={e => setProjectName(e.target.value)}
               />
@@ -109,7 +109,7 @@ const NavigationBar = () => {
 
 
             <Form.Group className="mb-3">
-              <Form.Label>Bitrate (kbps) dla MP3</Form.Label>
+              <Form.Label>Bitrate (kbps) for MP3</Form.Label>
               <Form.Select value={bitrate} onChange={e => setBitrate(e.target.value)}>
                 <option value="320">320 kbps</option>
                 <option value="256">256 kbps</option>
@@ -125,10 +125,10 @@ const NavigationBar = () => {
           </Form>
 
           <Button disabled={!showExitButton} variant="primary" onClick={() => { setRenderAudioWAV(true); setShowExitButton(false) }}>
-            Zapisz jako WAV
+            Save As WAV
           </Button>
           <Button disabled={!showExitButton} variant="secondary" onClick={() => { setRenderAudioMP3(true); setShowExitButton(false)}}>
-            Zapisz jako MP3
+            Save As MP3
           </Button>
           <div className='mt-3  progress'>
           <div role='progressbar' className='progress-bar progress-bar-striped progress-bar-animated' aria-valuenow={progressBar} aria-valuemin="0" aria-valuemax="100" style={{width: `${progressBar}%`, backgroundColor: 'hsl(245, 30%, 45%)'}}>

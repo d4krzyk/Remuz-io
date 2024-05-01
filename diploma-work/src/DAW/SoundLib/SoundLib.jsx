@@ -73,7 +73,7 @@ function SoundLib() {
         const wavesurfer = WaveSurfer.create({
           container: `#waveform-container-${sound.id}`,
           waveColor: 'white',
-          progressColor: 'purple',
+          progressColor: '#000235',
           height: 30,
           barWidth: 2.5,
           barRadius: 3,

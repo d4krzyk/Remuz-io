@@ -61,19 +61,25 @@ const MultiTrackPlayer = () => {
   const handleChangeTextTrack = (id) => {
 
     trackNameRef.current = multitrackInstance.tracks[id].intro.label;
-    setTrackName(multitrackInstance.tracks[id].intro.label);
+    setTrackName(trackNameRef.current);
     //setTrackName(currentTrackName);
     setShowTrackNameModal(true);
   }
   const handleTrackNameChange = (event) => {
-    setTrackName(event.target.value);
+    if(event.target.value.length !== ''){
+      setTrackName(event.target.value);
+    }
+    else{
+      setTrackName('Track Name');
+    }
     trackNameRef.current = event.target.value;
 
     //setTrackName(event.target.value);
   };
   const handleTrackNameSubmit = (id) => {
     // Aktualizuj nazwę tracka
-    const name = trackNameRef.current.toString();
+    //const name = trackNameRef.current.toString();
+    const name = trackName.toString();
     console.log(multitrackInstance.audios[id].duration)
     console.log(name)
     multitrackInstance.addTrack({
@@ -636,12 +642,12 @@ const MultiTrackPlayer = () => {
 
       <Modal show={showSpeedModal} onHide={() => setShowSpeedModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Speed Value</Modal.Title>
+          <Modal.Title>Speed Ratio</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
             <Form.Group controlId="formBasicRange">
-              <Form.Label>Value: {SpeedPerc}%</Form.Label>
+              <Form.Label>Value Ratio: {(SpeedPerc / 100)}x</Form.Label>
               <Form.Control type="range" min="50" max="200"  value={SpeedPerc} onChange={handleSpeedChange} />
             </Form.Group>
           </Form>
