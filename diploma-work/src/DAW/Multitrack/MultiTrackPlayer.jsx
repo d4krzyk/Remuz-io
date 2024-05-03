@@ -74,26 +74,24 @@ const MultiTrackPlayer = () => {
     }
     trackNameRef.current = event.target.value;
   };
-  const handleTrackNameSubmit = (id) => {
+  const handleTrackNameSubmit = (Select_id) => {
     // Aktualizuj nazwę tracka
     const name = trackName.toString();
-    console.log(multitrackInstance.audios[id].duration)
+    console.log(multitrackInstance.audios[Select_id].duration)
     console.log(name)
+    const { id, url, draggable, volume, startPosition, options, envelope } = multitrackInstance.tracks[Select_id];
     multitrackInstance.addTrack({
-      id: multitrackInstance.tracks[id].id,
-      url: multitrackInstance.tracks[id].url,
-      draggable: true,
-      volume: multitrackInstance.tracks[id].volume,
-      startPosition: multitrackInstance.tracks[id].startPosition,
-      options: {
-        waveColor: multitrackInstance.tracks[id].options.waveColor,
-        progressColor: multitrackInstance.tracks[id].options.progressColor,
-      },
+      id,
+      url,
+      draggable,
+      volume,
+      startPosition,
+      options,
       intro: {
         label: name || '',
         endTime: 0,
       },
-      envelope: multitrackInstance.tracks[id].envelope,
+      envelope,
     });
     setTimeMultiTrack(0);
     
@@ -528,7 +526,7 @@ const MultiTrackPlayer = () => {
       const id = event.currentTarget.getAttribute('track-id');
       setCurrentLayerID(parseInt(id));
     }
-    function handleEditFragOption(id, option) {
+    function handleEditFragOption(Select_id, option) {
       //console.log('Wybieram fragment do edycji');
       let colorOption = '';
       let labelOption = '';
@@ -550,29 +548,31 @@ const MultiTrackPlayer = () => {
       }
 
       multitrackInstance.stop();
-      if (multitrackInstance.tracks[id]?.url) {
+      if (multitrackInstance.tracks[Select_id]?.url) {
 
-        const newLayerEnvelope = { ...layerEnvelope, [id]: multitrackInstance.tracks[id].envelope };
+        const newLayerEnvelope = { ...layerEnvelope, [Select_id]: multitrackInstance.tracks[Select_id].envelope };
         setLayerEnvelope(newLayerEnvelope);
+        const { id, url, volume, options: { waveColor, progressColor } } = multitrackInstance.tracks[Select_id];
+
         multitrackInstance.addTrack({
-          id: multitrackInstance.tracks[id].id,
-          url: multitrackInstance.tracks[id].url,
-          volume: multitrackInstance.tracks[id].volume,
-          startPosition: multitrackInstance.tracks[id]?.startPosition || 0,
+          id,
+          url,
+          volume,
+          startPosition: multitrackInstance.tracks[Select_id]?.startPosition || 0,
           draggable: false,
           options: {
-            waveColor: multitrackInstance.tracks[id].options.waveColor,
-            progressColor: multitrackInstance.tracks[id].options.progressColor,
+            waveColor,
+            progressColor,
           },
           intro: {
-            label: multitrackInstance.tracks[id]?.intro?.label || '',
+            label: multitrackInstance.tracks[Select_id]?.intro?.label || '',
             endTime: 0,
           },
           markers: [{
-            time: multitrackInstance.tracks[id]?.markers?.time || layerMarkerStart[id] || 0,
+            time: multitrackInstance.tracks[Select_id]?.markers?.time || layerMarkerStart[Select_id] || 0,
             label: labelOption,
             color: colorOption,
-            end: multitrackInstance.tracks[id]?.markers?.end || layerMarkerEnd[id] || 2
+            end: multitrackInstance.tracks[Select_id]?.markers?.end || layerMarkerEnd[Select_id] || 2
           }]
         })
       }
