@@ -4,9 +4,20 @@ import WaveSurfer from 'wavesurfer.js';
 import { motion } from 'framer-motion';
 import '../../App.css'
 
-function SoundItem({ sound, showSound, currentFileID, isPlaying, togglePlayback, removeSound  }) {
+function SoundItem({ sound, currentFileID, isPlaying, togglePlayback, removeSound  }) {
   
-
+  const showSound = {
+    hidden: {
+      opacity: 0,
+    },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: '0.5',
+        ease: 'easeInOut',
+      },
+    },
+  };
   const [{isDragging}, drag] = useDrag(() => ({
     type: 'sound',
     item: { id: sound.id, name: sound.name, src: sound.audioSrc, duration: sound.duration},
@@ -20,7 +31,8 @@ function SoundItem({ sound, showSound, currentFileID, isPlaying, togglePlayback,
   }, []);
 
   return (
-    <motion.li  key={sound.id}
+    sound && 
+      <motion.li  key={sound.id}
             initial='hidden'
             animate='visible'
             variants={showSound}
@@ -50,18 +62,7 @@ function SoundItem({ sound, showSound, currentFileID, isPlaying, togglePlayback,
 
 
 function SoundLib() {
-  const showSound = {
-    hidden: {
-      opacity: 0,
-    },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: '0.5',
-        ease: 'easeInOut',
-      },
-    },
-  };
+
   const [currentFileID, setCurrentFileID] = useState(null); // Indeks aktualnie odtwarzanego pliku
   const [isPlaying, setIsPlaying] = useState(false); // Stan odtwarzania
   const [sounds, setSounds] = useState([]); // Lista dźwięków
@@ -198,7 +199,6 @@ function SoundLib() {
         {sounds.map(sound => <SoundItem 
               key={sound.id} 
               sound={sound} 
-              showSound={showSound} 
               currentFileID={currentFileID} 
               isPlaying={isPlaying} 
               togglePlayback={togglePlayback} 
