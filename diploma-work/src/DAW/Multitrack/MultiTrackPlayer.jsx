@@ -27,20 +27,20 @@ const MultiTrackPlayer = () => {
   const [hasTrackBeenSelected, setHasTrackBeenSelected] = useState(false);
 
 
-  const isSelectOption = ToolsStore(state => state.isSelectOption);
-  const isCutFragOption = ToolsStore(state => state.isCutFragOption);
-  const isDelFragOption = ToolsStore(state => state.isDelFragOption);
-  const isMuteFragOption = ToolsStore(state => state.isMuteFragOption);
-  const isTrashOption = ToolsStore(state => state.isTrashOption);
-  const isSpeedOption = ToolsStore(state => state.isSpeedOption);
-  const isReverseOption = ToolsStore(state => state.isReverseOption);
-  const isTextFormatOption = ToolsStore(state => state.isTextFormatOption);
+  const {
+    isSelectOption,
+    isCutFragOption,
+    isDelFragOption,
+    isMuteFragOption,
+    isTrashOption,
+    isSpeedOption,
+    isReverseOption,
+    isTextFormatOption,
+  } = ToolsStore((state) => state);
 
 
-  const {renderAudioWAV, setRenderAudioWAV} = NavStore();
-  const {renderAudioMP3, setRenderAudioMP3} = NavStore();
-  const {ProjectName, bitrate, setTimeMultiTrack} = NavStore();
-  const setIsPlaying = NavStore(state => state.setIsPlaying);
+  const { renderAudioWAV, setRenderAudioWAV, renderAudioMP3, setRenderAudioMP3,
+  ProjectName, bitrate, setTimeMultiTrack, setIsPlaying } = NavStore();
 
   const initRef = useRef(false);
   const idTempRef = useRef();
