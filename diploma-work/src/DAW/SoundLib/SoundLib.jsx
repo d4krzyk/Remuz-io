@@ -92,6 +92,12 @@ function SoundLib() {
           setCurrentFileID(null); // resetuje obecnie odtwarzany indeks
           setIsPlaying(false); // ustawia stan odtwarzania na false
         });
+        wavesurfer.on('ready', () => {
+          // Dźwięk jest gotowy do odtworzenia, możemy zaktualizować stan lub coś innego
+          setSounds(prevSounds => prevSounds.map(s =>
+            s.id === sound.id ? { ...s, wavesurfer: wavesurfer, isReady: true } : s
+          ));
+        });
 
         setSounds(prevSounds => prevSounds.map(s =>
           s.id === sound.id ? { ...s, wavesurfer: wavesurfer } : s
@@ -121,6 +127,7 @@ function SoundLib() {
             audioSrc: URL.createObjectURL(file),
             isPlaying: false,
             duration: parseFloat(audio.duration.toFixed(4)),
+            isReady: false,
           });
         };
         audio.onerror = function() {
@@ -151,18 +158,24 @@ function SoundLib() {
       console.log('Nie znaleziono wybranego dźwięku')
       return;
     }
-
+    
     //Zatrzymanie odtwarzania
     if (file.wavesurfer.isPlaying()) {
       file.wavesurfer.pause();
       setIsPlaying(false);
     } else {
+      //Nie uruchamianie jeśli dźwięk nie jest gotowy
+      if (!file.isReady) {
+        console.log('Dźwięk nie jest jeszcze gotowy do odtworzenia');
+        return;
+      }
       // Zastpowoanie wszystkich innych dźwięków przed odtworzeniem nowego
       sounds.forEach(sound => {
         if (sound.id !== id && sound.wavesurfer) {
           sound.wavesurfer.stop();
         }
       });
+
       //Włączenie odtwarzania wybranego dźwięku
       file.wavesurfer.play();
       setCurrentFileID(id); // Uaktualnij stan aktualnie odtwarzanego ID

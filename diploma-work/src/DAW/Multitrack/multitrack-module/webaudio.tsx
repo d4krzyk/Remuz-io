@@ -321,6 +321,7 @@ class WebAudioPlayer {
     const startOffset = Math.round(startSec * this.buffer.sampleRate);
     const endOffset = Math.round(endSec * this.buffer.sampleRate);
 
+    
     if (startOffset < 0 || endOffset > this.buffer.length || startOffset >= endOffset) {
         console.error('Invalid segment range. The start and end offsets must be within the buffer length and the start offset must be less than the end offset.');
         return;
@@ -367,29 +368,22 @@ class WebAudioPlayer {
       console.error('Invalid new length for the buffer.');
       return;
     }
-    console.log("New length: ", newLength, "channels", this.buffer.numberOfChannels, "sample rate", this.buffer.sampleRate)
+    //console.log("New length: ", newLength, "channels", this.buffer.numberOfChannels, "sample rate", this.buffer.sampleRate)
     let newBuffer = this.audioContext.createBuffer(this.buffer.numberOfChannels, newLength, this.buffer.sampleRate);
     function cubicInterpolate(y0: number, y1: number, y2: number, y3: number, mu: number) {
       let a0, a1, a2, a3, mu2;
-  
       mu2 = mu * mu;
       a0 = y3 - y2 - y0 + y1;
       a1 = y0 - y1 - a0;
       a2 = y2 - y0;
       a3 = y1;
-  
       return (a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3);
     }
-
     for (let channel = 0; channel < this.buffer.numberOfChannels; channel++) {
         let newChannelData = newBuffer.getChannelData(channel);
         let oldChannelData = this.buffer.getChannelData(channel);
-
         // Kopiowanie danych przed segmentem
-        for (let i = 0; i < startOffset; i++) {
-            newChannelData[i] = oldChannelData[i];
-        }
-
+        newChannelData.set(oldChannelData.subarray(0, startOffset), 0);
       // Przekopiowanie i przyspieszenie segmentu
       for (let i = startOffset, j = 0; i < endOffset; i += speedFactor, j++) {
         let i0 = Math.floor(i);
@@ -397,22 +391,17 @@ class WebAudioPlayer {
         let i2 = Math.min(i1 + 1, endOffset - 1);
         let i3 = Math.min(i2 + 1, endOffset - 1);
         let fraction = i - i0;
-
         if (i < endOffset && j + startOffset < newLength) {
           newChannelData[j + startOffset] = cubicInterpolate(
             oldChannelData[i0],
             oldChannelData[i1],
             oldChannelData[i2],
             oldChannelData[i3],
-            fraction
-          );
-        }
-  }
-
+            fraction);
+        }}
         // Kopiowanie danych po segmencie
-        for (let i = endOffset, j = startOffset + Math.round((endOffset - startOffset) / speedFactor); i < this.buffer.length && j < newLength; i++, j++) {
-            newChannelData[j] = oldChannelData[i];
-        }
+        let start = startOffset + Math.round((endOffset - startOffset) / speedFactor);
+        newChannelData.set(oldChannelData.subarray(endOffset, this.buffer.length), start);
     }
     this.buffer = newBuffer;
     this._duration = this.buffer.duration;
