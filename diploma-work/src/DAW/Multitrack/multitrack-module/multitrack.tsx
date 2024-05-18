@@ -786,14 +786,29 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
         const audio = this.audios[index];
         const duration = this.durations[index];
         const startPosition = track.startPosition;
+        const gainNode = OffContext.createGain();
+        
         //console.log("startPosition: ", startPosition, " duration: ", duration, " audio: ", audio)
         if (audio instanceof WebAudioPlayer) {
             const source = OffContext.createBufferSource();
+
             source.buffer = audio.Buffer;
-            source.connect(OffContext.destination);
+            source.connect(gainNode);
+            gainNode.connect(OffContext.destination);
+            const points = this.envelopes[index]?.getPoints();
+            if (points) {
+              // Ustaw początkową głośność na wartość pierwszego punktu
+              gainNode.gain.setValueAtTime(points[0].volume, points[0].time);
+  
+              // Następnie dla każdego kolejnego punktu, stwórz liniowe przejście do jego głośności
+              for (let i = 1; i < points.length; i++) {
+                gainNode.gain.linearRampToValueAtTime(points[i].volume, points[i].time);
+              }
+            }
             // Rozpocznij odtwarzanie w odpowiednim miejscu i czasie
             source.start(startPosition, 0, duration);
             console.log(source)
+            
         }
         else {
           const response = await fetch(audio.src);
@@ -802,7 +817,18 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
           // Utwórz BufferSource z danymi audio
           const source = OffContext.createBufferSource();
           source.buffer = audioBuffer;
-          source.connect(OffContext.destination);
+          source.connect(gainNode);
+          gainNode.connect(OffContext.destination);
+          const points = this.envelopes[index]?.getPoints();
+          if (points) {
+            // Ustaw początkową głośność na wartość pierwszego punktu
+            gainNode.gain.setValueAtTime(points[0].volume, points[0].time);
+
+            // Następnie dla każdego kolejnego punktu, stwórz liniowe przejście do jego głośności
+            for (let i = 1; i < points.length; i++) {
+              gainNode.gain.linearRampToValueAtTime(points[i].volume, points[i].time);
+            }
+          }
           // Rozpocznij odtwarzanie w odpowiednim miejscu i czasie
           source.start(startPosition, 0, duration);
         }
