@@ -34,7 +34,6 @@ class RenderAudio extends Component {
 
     renderAsWav = async (audioBuffer, RenderName) => {
 
-        NavStore.getState().setProgressBar(30);
         const wav = toWav(audioBuffer);
         const blobWav = new Blob([wav], { type: 'audio/wav' });
         if (RenderName === '') {

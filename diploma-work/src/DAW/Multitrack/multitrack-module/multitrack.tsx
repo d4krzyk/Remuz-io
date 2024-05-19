@@ -16,7 +16,7 @@ import toWav from 'audiobuffer-to-wav';
 import RenderAudio from './renderAudio';
 import './multitrack.css';
 import loadingGIF from './Loading.gif';
-
+import NavStore from '../../NavigationStore';
 
 export type TrackId = string | number
 
@@ -777,9 +777,20 @@ class MultiTrack extends EventEmitter<MultitrackEvents> {
     const sampleRate = 44100; // Standardowa częstotliwość próbkowania
     if(maxDuration === 0) return;
     const OffContext = new OfflineAudioContext(2, sampleRate * maxDuration, sampleRate)
+    let i = 1;
     for (let index of indexes) {
       if(this.tracks[index].id === PLACEHOLDER_TRACK.id){continue;}
       else if (this.tracks[index].url){
+
+        if(option === 'wav')
+          {
+            if(i<10)
+              {
+                NavStore.getState().setProgressBar(10*i);
+                i++;
+              }
+          }
+
         console.log("index: ", index)
       
         const track = this.tracks[index];
