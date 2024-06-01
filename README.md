@@ -17,7 +17,7 @@ To install the necessary packages, follow these steps:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/d4krzyk/DiplomaWork.git
+   git clone https://github.com/d4krzyk/Remuz.io-DiplomaWork.git
    ```
 2. Navigate to the project directory:
    ```bash
