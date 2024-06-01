@@ -1,7 +1,8 @@
 
-# Diploma Work
+# Remuz.io
+Remuz.io is an innovative project that leverages the Wavesurfer.js library to create a tool for editing multiple layers of audio tracks. By integrating Wavesurfer.js, Remuz.io allows users to visualize and manipulate audio waveforms with precision and ease. With features like real-time waveform rendering, intuitive controls, and robust functionality, Remuz.io provides a comprehensive solution for audio editing needs, making it ideal for musicians, producers, and audio engineers looking to create high-quality audio projects.
 
-This is a basic TypeScript and React project. Follow the instructions below to get started with installation and setup.
+Follow the instructions below to get started with installation and setup.
 
 ## Prerequisites
 
