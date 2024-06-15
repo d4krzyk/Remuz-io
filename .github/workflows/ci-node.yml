@@ -21,7 +21,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: List directory contents
     - run: ls -la /home/runner/work/Remuz-io/Remuz-io
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
