@@ -1,7 +1,7 @@
 # Etap 1: Budowanie aplikacji React
 FROM node:20 AS build
 
-WORKDIR /remuz-io
+WORKDIR /app
 
 # Skopiowanie plików projektu do kontenera
 COPY . .
@@ -16,10 +16,10 @@ RUN npm run build
 FROM node:20 AS serve
 
 # Ustawienie katalogu roboczego na folder zbudowanej aplikacji
-WORKDIR /remuz-io
+WORKDIR /app
 
 # Skopiowanie zbudowanych plików do kontenera
-COPY --from=build /remuz-io/build /remuz-io/build
+COPY --from=build /app/build /app/build
 
 # Instalacja serve
 RUN npm install -g serve
