@@ -19,11 +19,7 @@ To install the necessary packages, follow these steps:
    ```bash
    git clone https://github.com/d4krzyk/Remuz.io-DiplomaWork.git
    ```
-2. Navigate to the project directory:
-   ```bash
-   cd diploma-work
-   ```
-3. Install dependencies:
+2. Install dependencies in project:
    ```bash
    npm install
    ```
